@@ -19,6 +19,8 @@ public class ArmaController {
 
         if (tipo.equalsIgnoreCase("pistola")) {
             arma = new Pistola(nombre, precio, "CT/T", 12, 35, true);
+        } else if (tipo.equalsIgnoreCase("humo") || tipo.equalsIgnoreCase("granada")) {
+            arma = new GranadaHumo(nombre, precio, "CT/T", 1.5f, 18.0f);
         } else {
             arma = new Rifle(nombre, precio, "T", 30, 36, false);
         }
@@ -32,4 +34,4 @@ public class ArmaController {
 
         return response;
     }
-}                         
+}
