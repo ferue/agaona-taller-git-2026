@@ -1,6 +1,6 @@
 package py.edu.uc.lp3.ag.cs2.model;
 
-public class Rifle extends ArmaDeFuego {
+public class Rifle extends ArmaDeFuego implements UICapable {
     private boolean tieneMira;
 
     public Rifle(String nombre, int precio, String bando, int cargadorCapacidad, int danoBase, boolean tieneMira) {
@@ -16,5 +16,16 @@ public class Rifle extends ArmaDeFuego {
     @Override
     public String obtenerDetalles() {
         return "Rifle " + getNombre() + " | Daño: " + getDanoBase();
+    }
+
+    @Override
+    public String obtenerIconoHud() {
+        return "ui/hud/icons/rifle_ak47.png";
+    }
+
+    // Opcional: Reemplazar el método default de la interfaz
+    @Override
+    public String emitirSonidoInspeccion() {
+        return "clack-clack_metalico_rifle.wav";
     }
 }

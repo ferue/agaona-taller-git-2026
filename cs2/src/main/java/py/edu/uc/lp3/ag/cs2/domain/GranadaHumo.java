@@ -1,6 +1,6 @@
 package py.edu.uc.lp3.ag.cs2.model;
 
-public class GranadaHumo extends Granada {
+public class GranadaHumo extends Granada implements UICapable {
     private float duracionHumo;
 
     public GranadaHumo(String nombre, int precio, String bando, float tiempoRetardo, float duracionHumo) {
@@ -20,5 +20,10 @@ public class GranadaHumo extends Granada {
 
     public float getDuracionHumo() {
         return duracionHumo;
+    }
+
+    @Override
+    public String obtenerIconoHud() {
+        return "ui/hud/icons/smoke_grenade.png";
     }
 }

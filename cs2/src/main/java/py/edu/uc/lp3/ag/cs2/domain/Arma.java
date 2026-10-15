@@ -1,6 +1,6 @@
 package py.edu.uc.lp3.ag.cs2.model;
 
-public abstract class Arma {
+public abstract class Arma implements UICapable {
     private String nombre;
     private int precio;
     private String bando;
@@ -18,7 +18,7 @@ public abstract class Arma {
     public Arma(String nombre, int precio, String bando) {
         this.nombre = nombre;
         this.precio = precio;
-        this.bando = bando;
+        this.bando = "Universal";
         this.skin = "Vanilla";
     }
 
@@ -38,6 +38,18 @@ public abstract class Arma {
     public void aplicarSkin(String nombreSkin, boolean esStatTrak) {
         this.skin = nombreSkin + (esStatTrak ? " (StatTrak™)" : "");
     }
+
+    // --- Implementación por defecto de los métodos de UICapable para toda la jerarquía ---
+    @Override
+    public String obtenerIconoHud() {
+        return "ui/hud/icons/default_weapon.png"; // Icono genérico para cualquier arma
+    }
+
+    @Override
+    public String emitirSonidoInspeccion() {
+        return "sonido_inspeccion_arma_generico.wav"; // Sonido genérico
+    }
+    // -----------------------------------------------------------------------------------
 
     // Getters y Setters
     public String getNombre() { return nombre; }
