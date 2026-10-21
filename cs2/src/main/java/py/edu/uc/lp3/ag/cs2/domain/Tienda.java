@@ -1,37 +1,54 @@
-package py.edu.uc.lp3.ag.cs2.model;
+package py.edu.uc.lp3.ag.cs2.domain;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
+/**
+ * Tienda (buy menu) con un saldo y un catálogo de armas.
+ *
+ * Invariantes: el nombre no es vacío, el saldo nunca es negativo y el
+ * catálogo solo cambia mediante agregarArma(...) y comprarArma(...).
+ */
 public class Tienda {
-    private String nombre;
-    private List<Arma> armasDisponibles;
-    protected int saldo;
+    public static final int SALDO_INICIAL_CS2 = 800;
 
+    private final String nombre;
+    private final List<Arma> armasDisponibles = new ArrayList<>();
+    private int saldo;
+
+    // Constructor simple: dinero inicial de una partida de CS2
     public Tienda() {
+        this("Tienda CS2", SALDO_INICIAL_CS2);
     }
 
     public Tienda(String nombre, int saldoInicial) {
-        this.nombre = nombre;
+        if (nombre == null || nombre.isBlank()) {
+            throw new IllegalArgumentException("El nombre de la tienda es obligatorio");
+        }
+        if (saldoInicial < 0) {
+            throw new IllegalArgumentException("El saldo inicial no puede ser negativo: " + saldoInicial);
+        }
+        this.nombre = nombre.trim();
         this.saldo = saldoInicial;
-        this.armasDisponibles = new ArrayList<>();
     }
 
     public void agregarArma(Arma arma) {
-        armasDisponibles.add(arma);
+        armasDisponibles.add(Objects.requireNonNull(arma, "El arma no puede ser nula"));
     }
 
-    public boolean comprarArma(int index) {
-        if (index < 0 || index >= armasDisponibles.size()) {
-            return false;
+    public ResultadoCompra comprarArma(int indice) {
+        if (indice < 0 || indice >= armasDisponibles.size()) {
+            return ResultadoCompra.INDICE_INVALIDO;
         }
-        Arma arma = armasDisponibles.get(index);
-        if (saldo >= arma.getPrecio()) {
-            saldo -= arma.getPrecio();
-            armasDisponibles.remove(index);
-            return true;
+        Arma arma = armasDisponibles.get(indice);
+        if (saldo < arma.getPrecio()) {
+            return ResultadoCompra.SALDO_INSUFICIENTE;
         }
-        return false;
+        saldo -= arma.getPrecio();
+        armasDisponibles.remove(indice);
+        return ResultadoCompra.EXITOSA;
     }
 
     public String mostrarCatalogo() {
@@ -48,23 +65,20 @@ public class Tienda {
         return sb.toString();
     }
 
+    /** Vista de solo lectura: el catálogo no se puede modificar desde afuera. */
     public List<Arma> getArmasDisponibles() {
-        return armasDisponibles;
+        return Collections.unmodifiableList(armasDisponibles);
+    }
+
+    public int getCantidadArmas() {
+        return armasDisponibles.size();
     }
 
     public int getSaldo() {
         return saldo;
     }
 
-    public void setSaldo(int saldo) {
-        this.saldo = saldo;
-    }
-
     public String getNombre() {
         return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
     }
 }

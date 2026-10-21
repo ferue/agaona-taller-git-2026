@@ -10,28 +10,28 @@
 
 ## 📌 Descripción del Proyecto
 
-Este repositorio contiene la implementación de una API REST desarrollada con **Spring Boot 3** y **Java 21**, utilizando **Maven** y **Spring Web**.
+Este repositorio contiene una API REST desarrollada con **Spring Boot 4.1** y **Java 21**, usando **Maven** y **Spring Web MVC**.
 
-El proyecto modela diferentes tipos de armas del videojuego **Counter-Strike 2**, aplicando los principales conceptos de Programación Orientada a Objetos trabajados durante la asignatura.
+El proyecto modela armas y la tienda (buy menu) del videojuego **Counter-Strike 2**, aplicando los conceptos de Programación Orientada a Objetos trabajados en la asignatura.
 
 ### Conceptos de POO aplicados
 
-* **Encapsulamiento y ocultamiento de información:** los atributos del dominio permanecen ocultos mediante modificadores de acceso como `private`. El estado de los objetos se modifica mediante métodos de dominio.
-* **Herencia:** se utiliza una jerarquía de clases partiendo de la clase abstracta `Arma`.
-* **Generalización:** `ArmaDeFuego` y `Granada` representan especializaciones intermedias del dominio.
-* **Sobrecarga (Overloading):** se implementaron constructores múltiples y métodos sobrecargados (como la gestión de skins y acabados) con el mismo nombre pero distintas firmas.
-* **Sobrescritura (Overriding):** las clases concretas implementan el comportamiento definido por la clase base.
-* **Polimorfismo:** los objetos pueden ser tratados mediante el tipo general `Arma`, permitiendo solicitar su comportamiento sin depender de comprobaciones del tipo concreto.
-* **Abstracción:** `Arma` define comportamientos comunes mediante métodos abstractos que deben ser implementados por las clases concretas.
+* **Encapsulamiento y ocultamiento de información:** todos los atributos son `private` y no hay setters. `nombre`, `precio` y `bando` son `final`; la skin solo cambia mediante `aplicarSkin(...)` y la munición solo con `disparar()` / `recargar()`.
+* **Invariantes:** los constructores validan los datos y lanzan `IllegalArgumentException` si son inválidos (precio negativo, nombre vacío, cargador ≤ 0, etc.). La tienda nunca queda con saldo negativo y su catálogo se expone como lista de solo lectura.
+* **Herencia y generalización:** `Arma` (abstracta) → `ArmaDeFuego` / `Granada` (abstractas) → `Rifle`, `Pistola`, `GranadaHumo`.
+* **Sobrecarga (overloading):** constructores con distintas firmas en `Arma`, `Rifle`, `Pistola`, `GranadaHumo` y `Tienda`; métodos `aplicarSkin(String)` / `aplicarSkin(String, boolean)` y `FabricaArmas.crear(...)` con dos firmas.
+* **Sobrescritura (overriding):** las clases concretas implementan `ejecutarAccionPrincipal()` y `obtenerDetalles()` con `@Override`; `Rifle` y `GranadaHumo` redefinen `obtenerIconoHud()` y `Rifle` redefine el método `default` `emitirSonidoInspeccion()` de `UICapable`.
+* **Polimorfismo:** los controladores trabajan con `Arma` o `UICapable` sin preguntar por la clase concreta (`/api/armas/polimorfismo`, `/ui/{nombre}`).
+* **Abstracción:** `Arma`, `ArmaDeFuego` y `Granada` son abstractas; `UICapable` es una interfaz con un método abstracto y uno `default`.
 
 ---
 
 ## 🛠️ Tecnologías
 
 * **Java 21**
-* **Spring Boot 3**
-* **Spring Web**
-* **Maven**
+* **Spring Boot 4.1** (Spring Web MVC)
+* **Maven** (con Maven Wrapper)
+* **JUnit 5**
 * **Git / GitHub**
 * **Mermaid** para el diagrama de clases
 
@@ -40,27 +40,43 @@ El proyecto modela diferentes tipos de armas del videojuego **Counter-Strike 2**
 ## 📁 Estructura principal
 
 ```text
-src/
-└── main/
-    └── java/
-        └── py/
-            └── edu/
-                └── uc/
-                    └── lp3/
-                        ├── ag/
-                        │   └── cs2/
-                        │       ├── model/
-                        │       │   ├── Arma.java
-                        │       │   ├── ArmaDeFuego.java
-                        │       │   ├── Granada.java
-                        │       │   ├── Rifle.java
-                        │       │   ├── Pistola.java
-                        │       │   └── GranadaHumo.java
-                        │       └── controller/
-                        │           ├──ArmaController.java
-                                    ├──IndexController.java
-                                    └──TiendaController.java
-                        └── web/
+cs2/
+├── pom.xml
+└── src/
+    ├── main/java/py/edu/uc/lp3/ag/cs2/
+    │   ├── Cs2Application.java
+    │   ├── domain/                      ← modelo de dominio (POO)
+    │   │   ├── UICapable.java
+    │   │   ├── Arma.java
+    │   │   ├── ArmaDeFuego.java
+    │   │   ├── Granada.java
+    │   │   ├── Rifle.java
+    │   │   ├── Pistola.java
+    │   │   ├── GranadaHumo.java
+    │   │   ├── Tienda.java
+    │   │   └── ResultadoCompra.java
+    │   ├── service/
+    │   │   └── FabricaArmas.java        ← crea armas a partir del "tipo"
+    │   └── rest/                        ← capa web
+    │       ├── ManejadorErrores.java    ← traduce excepciones a 400 / 404
+    │       ├── RecursoNoEncontradoException.java
+    │       ├── controller/
+    │       │   ├── IndexController.java
+    │       │   ├── ArmaController.java
+    │       │   ├── TiendaController.java
+    │       │   └── UIController.java
+    │       └── response/
+    │           ├── ArmaResponse.java
+    │           ├── ErrorResponse.java
+    │           └── UIElementResponse.java
+    └── test/java/py/edu/uc/lp3/ag/cs2/
+        ├── Cs2ApplicationTests.java
+        ├── domain/
+        │   ├── ArmaTest.java
+        │   ├── ArmaDeFuegoTest.java
+        │   └── TiendaTest.java
+        └── rest/controller/
+            └── ControladoresTest.java
 ```
 
 ---
@@ -70,66 +86,132 @@ src/
 ### Requisitos
 
 * Java JDK 21
-* Maven incluido mediante Maven Wrapper
+* Maven incluido mediante Maven Wrapper (no hace falta instalarlo)
+
+Todos los comandos se ejecutan dentro de la carpeta `cs2/`.
 
 ### Compilar
 
-En Linux/macOS:
 ```bash
-./mvnw -q compile
+./mvnw -q compile        # Linux / macOS
+mvnw.cmd -q compile      # Windows
 ```
 
-En Windows:
+### Ejecutar los tests
+
 ```bash
-mvnw.cmd -q compile
+./mvnw test              # Linux / macOS
+mvnw.cmd test            # Windows
 ```
 
 ### Ejecutar la aplicación
 
-En Linux/macOS:
 ```bash
-./mvnw spring-boot:run
+./mvnw spring-boot:run   # Linux / macOS
+mvnw.cmd spring-boot:run # Windows
 ```
 
-En Windows:
-```bash
-mvnw.cmd spring-boot:run
-```
-
-Una vez iniciada la aplicación, el servidor queda disponible en:
-```text
-http://localhost:8080
-```
+El servidor queda disponible en `http://localhost:8080`.
 
 ---
 
 ## 🌐 API REST
 
-### `GET /`
-Endpoint utilizado para comprobar que el servicio está funcionando correctamente.
+Errores: los datos inválidos responden **400** y los recursos inexistentes **404**, siempre con un JSON de la forma:
 
-### Controller de construcción
-La API cuenta con controllers que reciben parámetros mediante `@RequestParam` para construir dinámicamente instancias de las armas aplicando constructores simples y sobrecargados. La respuesta se serializa automáticamente en formato **JSON**.
+```json
+{ "status": 404, "error": "Not Found", "mensaje": "Tienda no encontrada: tienda-9" }
+```
+
+### `GET /`
+Comprueba que el servicio funciona y lista los endpoints disponibles.
+
+### `GET /api/armas/probar`
+Construye un arma y ejecuta su acción principal. Parámetros (todos opcionales): `tipo` (`rifle`, `pistola`, `granada-humo`), `nombre`, `precio`, `bando`, `skin`, `statTrak`.
+
+Si llega `skin` se usa `aplicarSkin(String)`; si además llega `statTrak` se usa la sobrecarga `aplicarSkin(String, boolean)`.
+
+```bash
+curl "http://localhost:8080/api/armas/probar?tipo=rifle&nombre=AK-47&precio=2700&bando=T&skin=Asiimov&statTrak=true"
+```
+```json
+{
+  "arma": {
+    "tipo": "Rifle", "nombre": "AK-47", "precio": 2700, "bando": "T",
+    "skin": "StatTrak™ Asiimov",
+    "detalles": "Rifle AK-47 | Daño: 36 | Cargador: 30",
+    "iconoHud": "ui/hud/icons/rifle.png"
+  },
+  "resultadoAccion": "¡PUM! Disparo efectuado con AK-47. Munición restante: 29"
+}
+```
+
+Con `precio=-100` o `tipo=escopeta` responde **400**.
+
+### `GET /api/armas/rafaga`
+Dispara `disparos` veces (1 a 100) con un arma de fuego y luego recarga, mostrando cómo cambia la munición.
+
+```bash
+curl "http://localhost:8080/api/armas/rafaga?tipo=pistola&disparos=3"
+```
+Respuesta (resumida): `disparos` con 3 mensajes (munición 11, 10, 9), `municionAntesDeRecargar: 9`, `recarga: "Recargando PISTOLA... Munición: 12/12"`, `municionFinal: 12`.
+
+### `GET /api/armas/polimorfismo`
+Recorre una `List<Arma>` (rifle, pistola y granada de humo) y llama a los mismos métodos en cada una; cada clase responde con su propia sobrescritura.
+
+### Tienda
+
+| Método y ruta | Descripción | Respuestas |
+|---|---|---|
+| `POST /tienda?nombre=CT&saldo=5000` | Crea una tienda | 201 |
+| `POST /tienda/{id}/agregar-arma?tipo=rifle&nombre=M4A1-S&precio=2900&bando=CT` | Agrega un arma (opcionales: `cargadorCapacidad`, `danoBase`, `atributoEspecial`) | 201 · 400 tipo/datos inválidos · 404 |
+| `GET /tienda/{id}/catalogo` | Lista las armas y el saldo | 200 · 404 |
+| `POST /tienda/{id}/comprar?indiceArma=0` | Compra el arma de esa posición | 200 · 400 índice inválido · 409 saldo insuficiente · 404 |
+
+```bash
+curl -X POST "http://localhost:8080/tienda?nombre=CT&saldo=5000"
+# {"id":"tienda-0","nombre":"CT","saldo":5000,"armasEnInventario":0}
+
+curl -X POST "http://localhost:8080/tienda/tienda-0/agregar-arma?tipo=rifle&nombre=M4A1-S&precio=2900&bando=CT&cargadorCapacidad=25&danoBase=38&atributoEspecial=true"
+
+curl -X POST "http://localhost:8080/tienda/tienda-0/comprar?indiceArma=0"
+# {"tienda":"CT","resultado":"EXITOSA","mensaje":"Compra realizada","saldoRestante":2100,"armasRestantes":0}
+```
+
+### `GET /ui/{nombre}`
+Devuelve el elemento de HUD de un arma (`ak47`/`rifle`, `usp`/`pistola`, `smoke`/`humo`). El controlador solo conoce la interfaz `UICapable`. Un nombre inexistente responde **404**.
+
+```bash
+curl "http://localhost:8080/ui/ak47"
+# {"tipo":"Rifle","imagen":"ui/hud/icons/rifle.png","posicion":"HUD_SLOT_PRINCIPAL",
+#  "sonido":"clack-clack_metalico_rifle.wav","velocidad":200.0,"mensaje":"Cargado correctamente para CS2"}
+```
 
 ---
 
 ## 📐 Diagrama de Clases
 
-El siguiente diagrama representa el modelo de clases desarrollado para el dominio de **Counter-Strike 2**:
-
 ```mermaid
 classDiagram
+    class UICapable {
+        <<interface>>
+        +obtenerIconoHud() String
+        +emitirSonidoInspeccion() String
+    }
+
     class Arma {
         <<abstract>>
         -String nombre
         -int precio
         -String bando
         -String skin
-        +Arma()
-        +Arma(String nombre, int precio, String bando)
-        +Arma(String nombre, int precio, String bando, String skin)
+        #Arma()
+        #Arma(String nombre, int precio, String bando)
+        #Arma(String nombre, int precio, String bando, String skin)
         +aplicarSkin(String nombreSkin)
         +aplicarSkin(String nombreSkin, boolean esStatTrak)
+        +tieneSkinPersonalizada() boolean
+        +obtenerIconoHud() String
         +getNombre() String
         +getPrecio() int
         +getBando() String
@@ -141,9 +223,11 @@ classDiagram
     class ArmaDeFuego {
         <<abstract>>
         -int cargadorCapacidad
-        -int municionRestante
         -int danoBase
+        -int municionRestante
         +disparar() String
+        +recargar() String
+        +getMunicionRestante() int
     }
 
     class Granada {
@@ -154,35 +238,66 @@ classDiagram
 
     class Rifle {
         -boolean tieneMira
+        +Rifle(String nombre, int precio, String bando)
+        +Rifle(String nombre, int precio, String bando, int cargador, int dano, boolean tieneMira)
         +ejecutarAccionPrincipal() String
         +obtenerDetalles() String
+        +obtenerIconoHud() String
+        +emitirSonidoInspeccion() String
     }
 
     class Pistola {
         -boolean tieneSilenciador
+        +Pistola(String nombre, int precio, String bando)
+        +Pistola(String nombre, int precio, String bando, int cargador, int dano, boolean silenciador)
         +ejecutarAccionPrincipal() String
         +obtenerDetalles() String
     }
 
     class GranadaHumo {
         -float duracionHumo
+        +GranadaHumo(String nombre, int precio, String bando)
+        +GranadaHumo(String nombre, int precio, String bando, float retardo, float duracion)
         +ejecutarAccionPrincipal() String
         +obtenerDetalles() String
+        +obtenerIconoHud() String
     }
 
+    class Tienda {
+        -String nombre
+        -List~Arma~ armasDisponibles
+        -int saldo
+        +Tienda()
+        +Tienda(String nombre, int saldoInicial)
+        +agregarArma(Arma arma)
+        +comprarArma(int indice) ResultadoCompra
+        +mostrarCatalogo() String
+        +getArmasDisponibles() List~Arma~
+    }
+
+    class ResultadoCompra {
+        <<enumeration>>
+        EXITOSA
+        INDICE_INVALIDO
+        SALDO_INSUFICIENTE
+    }
+
+    UICapable <|.. Arma
     Arma <|-- ArmaDeFuego
     Arma <|-- Granada
     ArmaDeFuego <|-- Rifle
     ArmaDeFuego <|-- Pistola
     Granada <|-- GranadaHumo
+    Tienda o-- "0..*" Arma : armasDisponibles
+    Tienda ..> ResultadoCompra
 ```
 
 ---
 
 ## ⚙️ Diferencias Clave: Sobrecarga vs. Sobrescritura
 
-* **Sobrecarga (Overloading):** Se aplicó tanto en constructores (`Arma()`, `Arma(nombre, precio, bando)`, `Arma(nombre, precio, bando, skin)`) como en métodos de dominio orientados a la temática del juego (`aplicarSkin(String)` vs `aplicarSkin(String, boolean)` para acabados StatTrak™). Esto permite inicializar y manipular objetos con flexibilidad adaptándose a diferentes firmas en tiempo de compilación.
-* **Sobrescritura (Overriding):** Se implementó mediante el uso de anotaciones `@Override` en las clases hijas (`Rifle`, `Pistola`, `GranadaHumo`), redefiniendo los métodos abstractos heredados de la clase base `Arma` (`ejecutarAccionPrincipal()` y `obtenerDetalles()`) para proveer comportamientos polimórficos específicos sin requerir sentencias `if/else` externas.
+* **Sobrecarga (overloading):** mismo nombre, distinta firma, y el compilador elige cuál usar según los argumentos. Ejemplos: `new Rifle("AK-47", 2700, "T")` usa valores estándar, mientras que `new Rifle("AK-47", 2700, "T", 30, 36, true)` define todo; `aplicarSkin("Redline")` frente a `aplicarSkin("Asiimov", true)` (StatTrak™). Los constructores de `Arma` se encadenan con `this(...)` para que la validación esté en un solo lugar.
+* **Sobrescritura (overriding):** misma firma que en la clase padre o interfaz, redefinida con `@Override` en la clase hija; se resuelve en tiempo de ejecución según el objeto real. Ejemplos: `ejecutarAccionPrincipal()` dispara en `Rifle`/`Pistola` y lanza humo en `GranadaHumo`; `Rifle` reemplaza el sonido `default` de `UICapable`.
 
 ---
 

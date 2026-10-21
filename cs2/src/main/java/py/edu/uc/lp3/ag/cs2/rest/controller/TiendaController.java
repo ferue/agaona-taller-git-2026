@@ -1,43 +1,53 @@
-package py.edu.uc.lp3.ag.cs2.controller;
+package py.edu.uc.lp3.ag.cs2.rest.controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import py.edu.uc.lp3.ag.cs2.model.Pistola;
-import py.edu.uc.lp3.ag.cs2.model.Rifle;
-import py.edu.uc.lp3.ag.cs2.model.GranadaHumo;
-import py.edu.uc.lp3.ag.cs2.model.Tienda;
+import py.edu.uc.lp3.ag.cs2.domain.Arma;
+import py.edu.uc.lp3.ag.cs2.domain.ResultadoCompra;
+import py.edu.uc.lp3.ag.cs2.domain.Tienda;
+import py.edu.uc.lp3.ag.cs2.rest.RecursoNoEncontradoException;
+import py.edu.uc.lp3.ag.cs2.rest.response.ArmaResponse;
+import py.edu.uc.lp3.ag.cs2.service.FabricaArmas;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @RestController
 @RequestMapping("/tienda")
 public class TiendaController {
 
-    private Map<String, Tienda> tiendas = new HashMap<>();
-    private int contador = 0;
+    private final Map<String, Tienda> tiendas = new ConcurrentHashMap<>();
+    private final AtomicInteger contador = new AtomicInteger();
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> crearTienda(
             @RequestParam String nombre,
             @RequestParam(defaultValue = "5000") int saldo) {
-        String id = "tienda-" + (contador++);
         Tienda tienda = new Tienda(nombre, saldo);
+        String id = "tienda-" + contador.getAndIncrement();
         tiendas.put(id, tienda);
 
-        Map<String, Object> response = new HashMap<>();
+        Map<String, Object> response = new LinkedHashMap<>();
         response.put("id", id);
-        response.put("nombre", nombre);
-        response.put("saldo", saldo);
-        response.put("armasEnInventario", 0);
+        response.put("nombre", tienda.getNombre());
+        response.put("saldo", tienda.getSaldo());
+        response.put("armasEnInventario", tienda.getCantidadArmas());
         return response;
     }
 
     @PostMapping("/{id}/agregar-arma")
+    @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> agregarArma(
             @PathVariable String id,
             @RequestParam String tipo,
@@ -48,72 +58,63 @@ public class TiendaController {
             @RequestParam(defaultValue = "25") int danoBase,
             @RequestParam(defaultValue = "false") boolean atributoEspecial) {
 
-        Tienda tienda = tiendas.get(id);
-        Map<String, Object> response = new HashMap<>();
+        Tienda tienda = buscarTienda(id);
+        Arma arma = FabricaArmas.crear(tipo, nombre, precio, bando, cargadorCapacidad, danoBase, atributoEspecial);
+        tienda.agregarArma(arma);
 
-        if (tienda == null) {
-            response.put("error", "Tienda no encontrada");
-            return response;
-        }
-
-        if (tipo.equals("pistola")) {
-            Pistola arma = new Pistola(nombre, precio, bando, cargadorCapacidad, danoBase, atributoEspecial);
-            tienda.agregarArma(arma);
-        } else if (tipo.equals("rifle")) {
-            Rifle arma = new Rifle(nombre, precio, bando, cargadorCapacidad, danoBase, atributoEspecial);
-            tienda.agregarArma(arma);
-        } else if (tipo.equals("granada-humo")) {
-            GranadaHumo arma = new GranadaHumo(nombre, precio, bando, 20, 15);
-            tienda.agregarArma(arma);
-        }
-
+        Map<String, Object> response = new LinkedHashMap<>();
         response.put("tienda", tienda.getNombre());
-        response.put("armaAgregada", tipo);
-        response.put("armasEnInventario", tienda.getArmasDisponibles().size());
+        response.put("armaAgregada", ArmaResponse.de(arma));
+        response.put("armasEnInventario", tienda.getCantidadArmas());
         return response;
     }
 
     @GetMapping("/{id}/catalogo")
     public Map<String, Object> verCatalogo(@PathVariable String id) {
-        Tienda tienda = tiendas.get(id);
-        Map<String, Object> response = new HashMap<>();
+        Tienda tienda = buscarTienda(id);
+        List<ArmaResponse> armas = tienda.getArmasDisponibles().stream().map(ArmaResponse::de).toList();
 
-        if (tienda == null) {
-            response.put("error", "Tienda no encontrada");
-            return response;
-        }
-
+        Map<String, Object> response = new LinkedHashMap<>();
         response.put("tienda", tienda.getNombre());
         response.put("saldo", tienda.getSaldo());
+        response.put("totalArmas", armas.size());
+        response.put("armas", armas);
         response.put("catalogo", tienda.mostrarCatalogo());
-        response.put("totalArmas", tienda.getArmasDisponibles().size());
         return response;
     }
 
+    /**
+     * 200 si la compra se hizo, 400 si el índice no existe y
+     * 409 (Conflict) si el saldo no alcanza.
+     */
     @PostMapping("/{id}/comprar")
-    public Map<String, Object> comprarArma(
+    public ResponseEntity<Map<String, Object>> comprarArma(
             @PathVariable String id,
             @RequestParam int indiceArma) {
 
-        Tienda tienda = tiendas.get(id);
-        Map<String, Object> response = new HashMap<>();
+        Tienda tienda = buscarTienda(id);
+        ResultadoCompra resultado = tienda.comprarArma(indiceArma);
 
-        if (tienda == null) {
-            response.put("error", "Tienda no encontrada");
-            return response;
-        }
-
-        boolean compraExitosa = tienda.comprarArma(indiceArma);
-
+        Map<String, Object> response = new LinkedHashMap<>();
         response.put("tienda", tienda.getNombre());
-        response.put("compraExitosa", compraExitosa);
+        response.put("resultado", resultado);
+        response.put("mensaje", resultado.getMensaje());
         response.put("saldoRestante", tienda.getSaldo());
-        response.put("armasRestantes", tienda.getArmasDisponibles().size());
+        response.put("armasRestantes", tienda.getCantidadArmas());
 
-        if (!compraExitosa) {
-            response.put("razon", "Indice invalido o saldo insuficiente");
+        HttpStatus status = switch (resultado) {
+            case EXITOSA -> HttpStatus.OK;
+            case INDICE_INVALIDO -> HttpStatus.BAD_REQUEST;
+            case SALDO_INSUFICIENTE -> HttpStatus.CONFLICT;
+        };
+        return ResponseEntity.status(status).body(response);
+    }
+
+    private Tienda buscarTienda(String id) {
+        Tienda tienda = tiendas.get(id);
+        if (tienda == null) {
+            throw new RecursoNoEncontradoException("Tienda no encontrada: " + id);
         }
-
-        return response;
+        return tienda;
     }
 }
