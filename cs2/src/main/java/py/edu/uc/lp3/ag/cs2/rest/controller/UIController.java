@@ -1,13 +1,13 @@
-package py.edu.uc.lp3.ag.cs2.controller;
+package py.edu.uc.lp3.ag.cs2.rest.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
-import py.edu.uc.lp3.ag.cs2.model.Arma;
-import py.edu.uc.lp3.ag.cs2.model.Rifle;
-import py.edu.uc.lp3.ag.cs2.model.Pistola;
-import py.edu.uc.lp3.ag.cs2.model.GranadaHumo;
+import py.edu.uc.lp3.ag.cs2.domain.Arma;
+import py.edu.uc.lp3.ag.cs2.domain.Rifle;
+import py.edu.uc.lp3.ag.cs2.domain.Pistola;
+import py.edu.uc.lp3.ag.cs2.domain.GranadaHumo;
 import py.edu.uc.lp3.ag.cs2.rest.response.UIElementResponse;
 
 import java.util.HashMap;

@@ -1,4 +1,4 @@
-package py.edu.uc.lp3.ag.cs2.model;
+package py.edu.uc.lp3.ag.cs2.domain;
 
 public class GranadaHumo extends Granada implements UICapable {
     private float duracionHumo;

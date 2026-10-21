@@ -1,6 +1,6 @@
-package py.edu.uc.lp3.ag.cs2.controller;
+package py.edu.uc.lp3.ag.cs2.rest.controller;
 
-import py.edu.uc.lp3.ag.cs2.model.*;
+import py.edu.uc.lp3.ag.cs2.domain.*;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;

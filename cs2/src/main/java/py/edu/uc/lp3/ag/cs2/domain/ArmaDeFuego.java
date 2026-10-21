@@ -1,4 +1,4 @@
-package py.edu.uc.lp3.ag.cs2.model;
+package py.edu.uc.lp3.ag.cs2.domain;
 
 public abstract class ArmaDeFuego extends Arma {
     private int cargadorCapacidad;
