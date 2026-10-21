@@ -6,6 +6,12 @@
 **Dominio seleccionado:** Opción B — Counter-Strike 2  
 **Licencia:** Apache License 2.0  
 
+### 🔗 Commit de la entrega (Ejercicio POO-06)
+
+https://github.com/ferue/agaona-taller-git-2026/commit/4fae9d253e3a9f7961eee31320f8a42ea60ff53a
+
+Este commit tiene la solución completa: el código, los tests, este README y la bitácora. El commit posterior solo agrega este enlace.
+
 ---
 
 ## 📌 Descripción del Proyecto
