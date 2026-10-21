@@ -58,3 +58,17 @@
 ### Verificación realizada y limitaciones
 * El código y los tests se compilaron con `javac` (JDK 21) y los 18 tests pasaron.
 * En el entorno de la IA no había acceso a Maven Central, por lo que `./mvnw test` y `./mvnw spring-boot:run` **deben ejecutarse localmente** antes de la entrega para confirmar el arranque de Spring Boot y las respuestas HTTP reales.
+
+### Sesión 2 (continuación) — Verificación final y entregables
+
+7. **Verificación contra el enunciado POO-06:**
+   * *Prompt:* Verificar si el repositorio cumple con el enunciado del ejercicio POO-06 (consignas, entregables y template de paquetes) antes de mergear el PR.
+   * *Acción:* Se compararon las 10 consignas con el código: todas se cumplen. Quedaron pendientes los entregables (enlace al commit, especificaciones para Classroom) y la prueba con Maven.
+
+8. **Merge y prueba local:**
+   * *Prompt:* Mergear el PR, bajarlo a la notebook y probar Maven.
+   * *Acción:* El PR #2 se mergeó en `main`. El alumno ejecutó en su notebook `./mvnw test` y `./mvnw spring-boot:run`, y todo funcionó (21/10/2026).
+
+9. **Documentación de entrega:**
+   * *Prompt:* Agregar el enlace al commit en el README, mejorar la sección de sobrecarga y sobrescritura y preparar el archivo de especificaciones.
+   * *Acción:* La sección del README ahora explica qué se agregó, en qué clases y cómo distinguir sobrecarga de sobrescritura. Se generó el documento de especificaciones para Classroom.

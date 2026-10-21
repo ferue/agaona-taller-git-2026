@@ -294,10 +294,39 @@ classDiagram
 
 ---
 
-## ⚙️ Diferencias Clave: Sobrecarga vs. Sobrescritura
+## ⚙️ Qué cambió con la sobrecarga y con la sobrescritura
 
-* **Sobrecarga (overloading):** mismo nombre, distinta firma, y el compilador elige cuál usar según los argumentos. Ejemplos: `new Rifle("AK-47", 2700, "T")` usa valores estándar, mientras que `new Rifle("AK-47", 2700, "T", 30, 36, true)` define todo; `aplicarSkin("Redline")` frente a `aplicarSkin("Asiimov", true)` (StatTrak™). Los constructores de `Arma` se encadenan con `this(...)` para que la validación esté en un solo lugar.
-* **Sobrescritura (overriding):** misma firma que en la clase padre o interfaz, redefinida con `@Override` en la clase hija; se resuelve en tiempo de ejecución según el objeto real. Ejemplos: `ejecutarAccionPrincipal()` dispara en `Rifle`/`Pistola` y lanza humo en `GranadaHumo`; `Rifle` reemplaza el sonido `default` de `UICapable`.
+### Sobrecarga (overloading): qué se agregó y dónde
+
+| Clase | Qué se agregó | Firmas |
+|---|---|---|
+| `Arma` | Tres constructores encadenados con `this(...)`. Solo el más completo valida, así que todas las firmas dejan el objeto en un estado válido | `Arma()` · `Arma(nombre, precio, bando)` · `Arma(nombre, precio, bando, skin)` |
+| `Arma` | Sobrecarga de un mensaje del dominio: aplicar una skin común o una StatTrak™ | `aplicarSkin(String)` · `aplicarSkin(String, boolean)` |
+| `Rifle`, `Pistola`, `GranadaHumo` | Un constructor simple con los valores estándar de CS2 y otro completo. Ambos llaman a `super(...)` | p. ej. `Rifle(nombre, precio, bando)` · `Rifle(nombre, precio, bando, cargador, daño, tieneMira)` |
+| `Tienda` | Un constructor simple con el dinero inicial de CS2 ($800) y otro con nombre y saldo | `Tienda()` · `Tienda(nombre, saldoInicial)` |
+| `FabricaArmas` | Creación por tipo con los valores estándar o con todos los atributos | `crear(tipo, nombre, precio, bando)` · `crear(tipo, nombre, precio, bando, cargador, daño, especial)` |
+
+Ejemplo: `new Rifle("AK-47", 2700, "T")` crea un rifle estándar y `new Rifle("AK-47", 2700, "T", 30, 36, true)` define todos los atributos; `aplicarSkin("Redline")` deja `Redline` y `aplicarSkin("Asiimov", true)` deja `StatTrak™ Asiimov`.
+
+### Sobrescritura (overriding): qué se agregó y dónde
+
+| Método | Declarado en | Sobrescrito en | Qué hace cada hija |
+|---|---|---|---|
+| `ejecutarAccionPrincipal()` | `Arma` (abstracto) | `Rifle`, `Pistola`, `GranadaHumo` | El rifle dispara y avisa si usa mira; la pistola dispara e indica si está silenciada; la granada despliega humo |
+| `obtenerDetalles()` | `Arma` (abstracto) | `Rifle`, `Pistola`, `GranadaHumo` | Cada una describe sus propios atributos (daño y cargador, o retardo y duración) |
+| `obtenerIconoHud()` | `UICapable` → implementación base en `Arma` | `Rifle`, `GranadaHumo` | Icono propio; `Pistola` usa el genérico de `Arma` |
+| `emitirSonidoInspeccion()` | `UICapable` (método `default`) | `Rifle` | Sonido metálico propio; las demás usan el `default` de la interfaz |
+
+Los controladores usan estas sobrescrituras a través del tipo padre: `ArmaController` trabaja con `Arma` y `UIController` con `UICapable`, sin preguntar por la clase concreta. Se ve en `GET /api/armas/polimorfismo` y en `GET /ui/{nombre}`.
+
+### Cómo distinguir una de la otra
+
+| | Sobrecarga | Sobrescritura |
+|---|---|---|
+| Firma | **Mismo nombre, distinta lista de parámetros** | **Misma firma exacta** que en la clase padre o la interfaz |
+| Dónde | En la **misma clase** (o heredada) | En una **clase hija**, marcada con `@Override` |
+| Quién decide cuál se ejecuta | El **compilador**, según los argumentos | La **JVM en tiempo de ejecución**, según el objeto real |
+| Para qué se usa acá | Crear o modificar objetos con más o menos datos | Que cada tipo de arma responda a su manera al mismo mensaje |
 
 ---
 
