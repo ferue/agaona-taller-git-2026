@@ -1,7 +1,15 @@
 package py.edu.uc.lp3.ag.cs2.domain;
 
-public class Rifle extends ArmaDeFuego implements UICapable {
-    private boolean tieneMira;
+public class Rifle extends ArmaDeFuego {
+    public static final int CARGADOR_POR_DEFECTO = 30;
+    public static final int DANO_POR_DEFECTO = 36;
+
+    private final boolean tieneMira;
+
+    // Constructor sobrecargado: rifle de asalto estándar sin mira
+    public Rifle(String nombre, int precio, String bando) {
+        this(nombre, precio, bando, CARGADOR_POR_DEFECTO, DANO_POR_DEFECTO, false);
+    }
 
     public Rifle(String nombre, int precio, String bando, int cargadorCapacidad, int danoBase, boolean tieneMira) {
         super(nombre, precio, bando, cargadorCapacidad, danoBase);
@@ -15,17 +23,22 @@ public class Rifle extends ArmaDeFuego implements UICapable {
 
     @Override
     public String obtenerDetalles() {
-        return "Rifle " + getNombre() + " | Daño: " + getDanoBase();
+        return "Rifle " + getNombre() + " | Daño: " + getDanoBase() + " | Cargador: " + getCargadorCapacidad()
+                + (tieneMira ? " | Con mira" : "");
     }
 
     @Override
     public String obtenerIconoHud() {
-        return "ui/hud/icons/rifle_ak47.png";
+        return "ui/hud/icons/rifle.png";
     }
 
-    // Opcional: Reemplazar el método default de la interfaz
+    // Redefine el método default de UICapable
     @Override
     public String emitirSonidoInspeccion() {
         return "clack-clack_metalico_rifle.wav";
+    }
+
+    public boolean isTieneMira() {
+        return tieneMira;
     }
 }

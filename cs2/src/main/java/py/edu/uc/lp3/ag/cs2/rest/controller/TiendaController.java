@@ -10,6 +10,7 @@ import py.edu.uc.lp3.ag.cs2.domain.Pistola;
 import py.edu.uc.lp3.ag.cs2.domain.Rifle;
 import py.edu.uc.lp3.ag.cs2.domain.GranadaHumo;
 import py.edu.uc.lp3.ag.cs2.domain.Tienda;
+import py.edu.uc.lp3.ag.cs2.domain.ResultadoCompra;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -103,7 +104,7 @@ public class TiendaController {
             return response;
         }
 
-        boolean compraExitosa = tienda.comprarArma(indiceArma);
+        boolean compraExitosa = tienda.comprarArma(indiceArma) == ResultadoCompra.EXITOSA;
 
         response.put("tienda", tienda.getNombre());
         response.put("compraExitosa", compraExitosa);
