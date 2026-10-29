@@ -1,9 +1,11 @@
 package py.edu.uc.lp3.ag.cs2.service;
 
 import py.edu.uc.lp3.ag.cs2.domain.Arma;
+import py.edu.uc.lp3.ag.cs2.domain.GranadaHE;
 import py.edu.uc.lp3.ag.cs2.domain.GranadaHumo;
 import py.edu.uc.lp3.ag.cs2.domain.Pistola;
 import py.edu.uc.lp3.ag.cs2.domain.Rifle;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.TipoArmaNoSoportadoException;
 
 import java.util.Locale;
 
@@ -14,7 +16,7 @@ import java.util.Locale;
  */
 public final class FabricaArmas {
 
-    public static final String TIPOS_VALIDOS = "rifle, pistola, granada-humo";
+    public static final String TIPOS_VALIDOS = "rifle, pistola, granada-humo, granada-he";
 
     private FabricaArmas() {
     }
@@ -25,7 +27,8 @@ public final class FabricaArmas {
             case "rifle" -> new Rifle(nombre, precio, bando);
             case "pistola" -> new Pistola(nombre, precio, bando);
             case "granada-humo" -> new GranadaHumo(nombre, precio, bando);
-            default -> throw tipoNoSoportado(tipo);
+            case "granada-he" -> new GranadaHE(nombre, precio, bando);
+            default -> throw new TipoArmaNoSoportadoException(tipo, TIPOS_VALIDOS);
         };
     }
 
@@ -40,22 +43,20 @@ public final class FabricaArmas {
             case "rifle" -> new Rifle(nombre, precio, bando, cargadorCapacidad, danoBase, atributoEspecial);
             case "pistola" -> new Pistola(nombre, precio, bando, cargadorCapacidad, danoBase, atributoEspecial);
             case "granada-humo" -> new GranadaHumo(nombre, precio, bando);
-            default -> throw tipoNoSoportado(tipo);
+            case "granada-he" -> new GranadaHE(nombre, precio, bando);
+            default -> throw new TipoArmaNoSoportadoException(tipo, TIPOS_VALIDOS);
         };
     }
 
     private static String normalizar(String tipo) {
         if (tipo == null) {
-            throw tipoNoSoportado(null);
+            throw new TipoArmaNoSoportadoException(null, TIPOS_VALIDOS);
         }
         String t = tipo.trim().toLowerCase(Locale.ROOT);
         return switch (t) {
             case "humo", "granada", "smoke" -> "granada-humo";
+            case "he", "explosiva", "granada-explosiva" -> "granada-he";
             default -> t;
         };
-    }
-
-    private static IllegalArgumentException tipoNoSoportado(String tipo) {
-        return new IllegalArgumentException("Tipo de arma no soportado: '" + tipo + "'. Valores válidos: " + TIPOS_VALIDOS);
     }
 }

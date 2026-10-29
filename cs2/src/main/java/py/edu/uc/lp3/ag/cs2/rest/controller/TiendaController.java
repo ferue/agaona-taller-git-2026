@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import py.edu.uc.lp3.ag.cs2.domain.Arma;
 import py.edu.uc.lp3.ag.cs2.domain.ResultadoCompra;
 import py.edu.uc.lp3.ag.cs2.domain.Tienda;
-import py.edu.uc.lp3.ag.cs2.rest.RecursoNoEncontradoException;
+import py.edu.uc.lp3.ag.cs2.exception.noencontrado.TiendaNoEncontradaException;
 import py.edu.uc.lp3.ag.cs2.rest.response.ArmaResponse;
 import py.edu.uc.lp3.ag.cs2.service.FabricaArmas;
 
@@ -113,7 +113,7 @@ public class TiendaController {
     private Tienda buscarTienda(String id) {
         Tienda tienda = tiendas.get(id);
         if (tienda == null) {
-            throw new RecursoNoEncontradoException("Tienda no encontrada: " + id);
+            throw new TiendaNoEncontradaException(id);
         }
         return tienda;
     }

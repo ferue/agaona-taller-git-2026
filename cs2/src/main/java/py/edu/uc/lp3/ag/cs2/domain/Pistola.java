@@ -1,10 +1,22 @@
 package py.edu.uc.lp3.ag.cs2.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "pistolas")
 public class Pistola extends ArmaDeFuego {
     public static final int CARGADOR_POR_DEFECTO = 12;
     public static final int DANO_POR_DEFECTO = 30;
 
-    private final boolean tieneSilenciador;
+    @Column(nullable = false)
+    private boolean tieneSilenciador;
+
+    /** Solo para JPA. */
+    protected Pistola() {
+        super();
+    }
 
     // Constructor sobrecargado: pistola estándar sin silenciador
     public Pistola(String nombre, int precio, String bando) {
@@ -25,6 +37,12 @@ public class Pistola extends ArmaDeFuego {
     public String obtenerDetalles() {
         return "Pistola " + getNombre() + " | Daño: " + getDanoBase() + " | Cargador: " + getCargadorCapacidad()
                 + (tieneSilenciador ? " | Silenciador" : "");
+    }
+
+    @Override
+    public void actualizarCon(Arma datos) {
+        super.actualizarCon(datos);
+        this.tieneSilenciador = ((Pistola) datos).tieneSilenciador;
     }
 
     public boolean isTieneSilenciador() {

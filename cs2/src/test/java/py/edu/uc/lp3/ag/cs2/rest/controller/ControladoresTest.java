@@ -4,7 +4,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import py.edu.uc.lp3.ag.cs2.domain.ResultadoCompra;
-import py.edu.uc.lp3.ag.cs2.rest.RecursoNoEncontradoException;
+import py.edu.uc.lp3.ag.cs2.exception.negocio.ArmaNoDisparaException;
+import py.edu.uc.lp3.ag.cs2.exception.noencontrado.ElementoUINoEncontradoException;
+import py.edu.uc.lp3.ag.cs2.exception.noencontrado.TiendaNoEncontradaException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.CantidadDisparosInvalidaException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.PrecioNegativoException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.TipoArmaNoSoportadoException;
 import py.edu.uc.lp3.ag.cs2.rest.response.ArmaResponse;
 
 import java.util.List;
@@ -33,8 +38,8 @@ class ControladoresTest {
     @DisplayName("/api/armas/probar rechaza precio negativo y tipo desconocido")
     void probarArmaInvalida() {
         ArmaController c = new ArmaController();
-        assertThrows(IllegalArgumentException.class, () -> c.probarArma("X", -100, "rifle", "T", null, null));
-        assertThrows(IllegalArgumentException.class, () -> c.probarArma("Nova", 1050, "escopeta", "CT", null, null));
+        assertThrows(PrecioNegativoException.class, () -> c.probarArma("X", -100, "rifle", "T", null, null));
+        assertThrows(TipoArmaNoSoportadoException.class, () -> c.probarArma("Nova", 1050, "escopeta", "CT", null, null));
     }
 
     @Test
@@ -44,8 +49,8 @@ class ControladoresTest {
         assertEquals(3, ((List<?>) r.get("disparos")).size());
         assertEquals(9, r.get("municionAntesDeRecargar"));
         assertEquals(12, r.get("municionFinal"));
-        assertThrows(IllegalArgumentException.class, () -> new ArmaController().rafaga("humo", 3));
-        assertThrows(IllegalArgumentException.class, () -> new ArmaController().rafaga("rifle", 0));
+        assertThrows(ArmaNoDisparaException.class, () -> new ArmaController().rafaga("humo", 3));
+        assertThrows(CantidadDisparosInvalidaException.class, () -> new ArmaController().rafaga("rifle", 0));
     }
 
     @Test
@@ -70,9 +75,9 @@ class ControladoresTest {
         assertEquals(409, c.comprarArma(id, 0).getStatusCode().value());
         assertEquals(400, c.comprarArma(id, 5).getStatusCode().value());
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(TipoArmaNoSoportadoException.class,
                 () -> c.agregarArma(id, "escopeta", "Nova", 1050, "CT", 8, 26, false));
-        assertThrows(RecursoNoEncontradoException.class, () -> c.verCatalogo("no-existe"));
+        assertThrows(TiendaNoEncontradaException.class, () -> c.verCatalogo("no-existe"));
     }
 
     @Test
@@ -81,6 +86,6 @@ class ControladoresTest {
         UIController c = new UIController();
         assertEquals("Rifle", c.consultarUI("AK47").tipo());
         assertEquals("ui/hud/icons/smoke_grenade.png", c.consultarUI("smoke").imagen());
-        assertThrows(RecursoNoEncontradoException.class, () -> c.consultarUI("awp"));
+        assertThrows(ElementoUINoEncontradoException.class, () -> c.consultarUI("awp"));
     }
 }

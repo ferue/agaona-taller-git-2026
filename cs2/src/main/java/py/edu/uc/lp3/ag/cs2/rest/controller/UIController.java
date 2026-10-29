@@ -7,7 +7,7 @@ import py.edu.uc.lp3.ag.cs2.domain.GranadaHumo;
 import py.edu.uc.lp3.ag.cs2.domain.Pistola;
 import py.edu.uc.lp3.ag.cs2.domain.Rifle;
 import py.edu.uc.lp3.ag.cs2.domain.UICapable;
-import py.edu.uc.lp3.ag.cs2.rest.RecursoNoEncontradoException;
+import py.edu.uc.lp3.ag.cs2.exception.noencontrado.ElementoUINoEncontradoException;
 import py.edu.uc.lp3.ag.cs2.rest.response.UIElementResponse;
 
 import java.util.Locale;
@@ -36,8 +36,7 @@ public class UIController {
     public UIElementResponse consultarUI(@PathVariable String nombre) {
         UICapable elemento = catalogo.get(nombre.toLowerCase(Locale.ROOT));
         if (elemento == null) {
-            throw new RecursoNoEncontradoException(
-                    "No hay elemento de UI para '" + nombre + "'. Valores válidos: " + catalogo.keySet());
+            throw new ElementoUINoEncontradoException(nombre, catalogo.keySet());
         }
 
         // POLIMORFISMO: el controlador solo conoce el contrato UICapable,

@@ -1,0 +1,1127 @@
+{
+  "_type": "export",
+  "__export_format": 4,
+  "__export_date": "2026-10-29T18:00:00.000Z",
+  "__export_source": "insomnia.desktop.app:v10.0.0",
+  "resources": [
+    {
+      "_id": "wrk_cs2_crud",
+      "_type": "workspace",
+      "parentId": null,
+      "name": "CS2 - CRUD de Armas (LP3 CYT646)",
+      "description": "CRUD de Arma persistido en H2 + simulación de explosiones con granada HE (GranadaHE, Jugador, Posicion). Cada error tiene su propia excepción y su handler. Correr las carpetas en orden con la base recién creada (borrar cs2/data para empezar de cero).",
+      "scope": "collection"
+    },
+    {
+      "_id": "env_cs2_base",
+      "_type": "environment",
+      "parentId": "wrk_cs2_crud",
+      "name": "Base Environment",
+      "data": {
+        "base_url": "http://localhost:8080",
+        "id": "1",
+        "jugadorId": "1",
+        "granadaId": "6"
+      },
+      "isPrivate": false
+    },
+    {
+      "_id": "fld_1",
+      "_type": "request_group",
+      "parentId": "wrk_cs2_crud",
+      "name": "1. Armas - CRUD",
+      "metaSortKey": 0
+    },
+    {
+      "_id": "fld_2",
+      "_type": "request_group",
+      "parentId": "wrk_cs2_crud",
+      "name": "2. Armas - errores",
+      "metaSortKey": 1
+    },
+    {
+      "_id": "fld_3",
+      "_type": "request_group",
+      "parentId": "wrk_cs2_crud",
+      "name": "3. Jugadores",
+      "metaSortKey": 2
+    },
+    {
+      "_id": "fld_4",
+      "_type": "request_group",
+      "parentId": "wrk_cs2_crud",
+      "name": "4. Jugadores - errores",
+      "metaSortKey": 3
+    },
+    {
+      "_id": "fld_5",
+      "_type": "request_group",
+      "parentId": "wrk_cs2_crud",
+      "name": "5. Explosión (simulación)",
+      "metaSortKey": 4
+    },
+    {
+      "_id": "fld_6",
+      "_type": "request_group",
+      "parentId": "wrk_cs2_crud",
+      "name": "6. Explosión - errores",
+      "metaSortKey": 5
+    },
+    {
+      "_id": "fld_7",
+      "_type": "request_group",
+      "parentId": "wrk_cs2_crud",
+      "name": "7. Tienda, ráfaga y HUD",
+      "metaSortKey": 6
+    },
+    {
+      "_id": "fld_8",
+      "_type": "request_group",
+      "parentId": "wrk_cs2_crud",
+      "name": "8. Eliminar (al final)",
+      "metaSortKey": 7
+    },
+    {
+      "_id": "req_01",
+      "_type": "request",
+      "parentId": "fld_1",
+      "name": "Listar todas",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 200",
+      "metaSortKey": 0,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_02",
+      "_type": "request",
+      "parentId": "fld_1",
+      "name": "Listar por bando (CT)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas?bando=CT",
+      "description": "Respuesta esperada: 200",
+      "metaSortKey": 1,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_03",
+      "_type": "request",
+      "parentId": "fld_1",
+      "name": "Obtener por id",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas/{{ _.id }}",
+      "description": "Respuesta esperada: 200",
+      "metaSortKey": 2,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_04",
+      "_type": "request",
+      "parentId": "fld_1",
+      "name": "Crear rifle (AWP)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 201 + Location",
+      "metaSortKey": 3,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"rifle\",\n  \"nombre\": \"AWP\",\n  \"precio\": 4750,\n  \"bando\": \"CT/T\",\n  \"skin\": \"Dragon Lore\",\n  \"statTrak\": false,\n  \"cargadorCapacidad\": 5,\n  \"danoBase\": 115,\n  \"atributoEspecial\": true\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_05",
+      "_type": "request",
+      "parentId": "fld_1",
+      "name": "Crear pistola (Desert Eagle)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 201",
+      "metaSortKey": 4,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"pistola\",\n  \"nombre\": \"Desert Eagle\",\n  \"precio\": 700,\n  \"bando\": \"CT/T\",\n  \"cargadorCapacidad\": 7,\n  \"danoBase\": 53\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_06",
+      "_type": "request",
+      "parentId": "fld_1",
+      "name": "Crear granada de humo",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 201",
+      "metaSortKey": 5,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"granada-humo\",\n  \"nombre\": \"Smoke Pro\",\n  \"precio\": 300,\n  \"bando\": \"CT/T\",\n  \"duracionHumo\": 20\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_07",
+      "_type": "request",
+      "parentId": "fld_1",
+      "name": "Crear granada HE",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 201",
+      "metaSortKey": 6,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"granada-he\",\n  \"nombre\": \"HE Casera\",\n  \"precio\": 300,\n  \"bando\": \"CT/T\",\n  \"radioExplosion\": 10,\n  \"danoMaximo\": 120,\n  \"empujeMaximo\": 8\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_08",
+      "_type": "request",
+      "parentId": "fld_1",
+      "name": "Crear arma tirada en el mapa",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 201 con posicion (la explosión la puede empujar)",
+      "metaSortKey": 7,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"rifle\",\n  \"nombre\": \"FAMAS\",\n  \"precio\": 2050,\n  \"bando\": \"CT\",\n  \"x\": 1,\n  \"y\": 1,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_09",
+      "_type": "request",
+      "parentId": "fld_1",
+      "name": "Actualizar (PUT)",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/armas/{{ _.id }}",
+      "description": "Respuesta esperada: 200",
+      "metaSortKey": 8,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"rifle\",\n  \"nombre\": \"AK-47\",\n  \"precio\": 2500,\n  \"bando\": \"T\",\n  \"skin\": \"Vulcan\",\n  \"statTrak\": true,\n  \"cargadorCapacidad\": 30,\n  \"danoBase\": 36,\n  \"atributoEspecial\": false\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_10",
+      "_type": "request",
+      "parentId": "fld_8",
+      "name": "Eliminar (DELETE)",
+      "method": "DELETE",
+      "url": "{{ _.base_url }}/api/armas/{{ _.id }}",
+      "description": "Respuesta esperada: 204 sin cuerpo. Borra el arma con el id del entorno (1 = AK-47). Está al final porque otras peticiones usan esa arma.",
+      "metaSortKey": 100,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_11",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Nombre duplicado → 409 ArmaDuplicadaException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 409",
+      "metaSortKey": 10,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"rifle\",\n  \"nombre\": \"ak-47\",\n  \"precio\": 2700,\n  \"bando\": \"T\"\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_12",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Precio mayor a $16.000 → 400 PrecioExcedidoException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 11,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"rifle\",\n  \"nombre\": \"AK Dorada\",\n  \"precio\": 20000,\n  \"bando\": \"T\"\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_13",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Bando inválido → 400 BandoInvalidoException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 12,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"pistola\",\n  \"nombre\": \"P2000\",\n  \"precio\": 200,\n  \"bando\": \"Terroristas\"\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_14",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Granada con skin → 400 SkinNoPermitidaException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 13,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"granada-humo\",\n  \"nombre\": \"Smoke Dorada\",\n  \"precio\": 300,\n  \"bando\": \"CT\",\n  \"skin\": \"Oro\"\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_15",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Cambiar el tipo en PUT → 400 CambioDeTipoException",
+      "method": "PUT",
+      "url": "{{ _.base_url }}/api/armas/{{ _.id }}",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 14,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"pistola\",\n  \"nombre\": \"AK-47\",\n  \"precio\": 2700,\n  \"bando\": \"T\"\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_16",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Id inexistente → 404 ArmaNoEncontradaException",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas/9999",
+      "description": "Respuesta esperada: 404",
+      "metaSortKey": 15,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_17",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Precio negativo → 400 PrecioNegativoException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 16,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"rifle\",\n  \"nombre\": \"Galil Rota\",\n  \"precio\": -100,\n  \"bando\": \"T\"\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_18",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Tipo desconocido → 400 TipoArmaNoSoportadoException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 17,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"escopeta\",\n  \"nombre\": \"Nova\",\n  \"precio\": 1050,\n  \"bando\": \"CT\"\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_19",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Falta el nombre → 400 CampoObligatorioException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 18,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"rifle\",\n  \"precio\": 2700,\n  \"bando\": \"T\"\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_20",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Cargador 0 → 400 CargadorInvalidoException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 19,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"rifle\",\n  \"nombre\": \"SG 553\",\n  \"precio\": 3000,\n  \"bando\": \"T\",\n  \"cargadorCapacidad\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_21",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Daño base 0 → 400 DanoInvalidoException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 20,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"pistola\",\n  \"nombre\": \"CZ75\",\n  \"precio\": 500,\n  \"bando\": \"T\",\n  \"danoBase\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_22",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Retardo negativo → 400 TiempoRetardoInvalidoException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 21,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"granada-humo\",\n  \"nombre\": \"Smoke Rara\",\n  \"precio\": 300,\n  \"bando\": \"CT\",\n  \"tiempoRetardo\": -1\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_23",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Duración del humo 0 → 400 DuracionHumoInvalidaException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 22,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"granada-humo\",\n  \"nombre\": \"Smoke Corta\",\n  \"precio\": 300,\n  \"bando\": \"CT\",\n  \"duracionHumo\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_24",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Radio de explosión 0 → 400 RadioExplosionInvalidoException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 23,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"granada-he\",\n  \"nombre\": \"HE Vacía\",\n  \"precio\": 300,\n  \"bando\": \"CT\",\n  \"radioExplosion\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_25",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Empuje negativo → 400 EmpujeInvalidoException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 24,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"granada-he\",\n  \"nombre\": \"HE Rara\",\n  \"precio\": 300,\n  \"bando\": \"CT\",\n  \"empujeMaximo\": -1\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_26",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Posición incompleta → 400 CampoObligatorioException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400 (falta 'y')",
+      "metaSortKey": 25,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"rifle\",\n  \"nombre\": \"AUG\",\n  \"precio\": 3300,\n  \"bando\": \"CT\",\n  \"x\": 1\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_27",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Coordenada infinita → 400 CoordenadaInvalidaException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400. 1e400 no entra en un double y queda como infinito",
+      "metaSortKey": 26,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"rifle\",\n  \"nombre\": \"Scout\",\n  \"precio\": 1700,\n  \"bando\": \"CT\",\n  \"x\": 1e400,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_28",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "JSON mal formado → 400 JsonInvalido",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 27,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{ \"tipo\": \"rifle\", \"nombre\": \"Rota\", \"precio\": "
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_29",
+      "_type": "request",
+      "parentId": "fld_3",
+      "name": "Listar jugadores",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "description": "Respuesta esperada: 200: Fénix, Halcón, Lobo y Cuervo (carga inicial)",
+      "metaSortKey": 28,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_30",
+      "_type": "request",
+      "parentId": "fld_3",
+      "name": "Obtener jugador",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/jugadores/{{ _.jugadorId }}",
+      "description": "Respuesta esperada: 200",
+      "metaSortKey": 29,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_31",
+      "_type": "request",
+      "parentId": "fld_3",
+      "name": "Crear jugador",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "description": "Respuesta esperada: 201 + Location",
+      "metaSortKey": 30,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Tigre\",\n  \"bando\": \"CT\",\n  \"vida\": 100,\n  \"tieneChaleco\": true,\n  \"x\": 6,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_32",
+      "_type": "request",
+      "parentId": "fld_4",
+      "name": "Vida 150 → 400 VidaInvalidaException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 31,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Inmortal\",\n  \"bando\": \"T\",\n  \"vida\": 150,\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_33",
+      "_type": "request",
+      "parentId": "fld_4",
+      "name": "Bando CT/T → 400 BandoInvalidoException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "description": "Respuesta esperada: 400 (un jugador juega para T o para CT)",
+      "metaSortKey": 32,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Doble\",\n  \"bando\": \"CT/T\",\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_34",
+      "_type": "request",
+      "parentId": "fld_4",
+      "name": "Nombre duplicado → 409 JugadorDuplicadoException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "description": "Respuesta esperada: 409",
+      "metaSortKey": 33,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"lobo\",\n  \"bando\": \"T\",\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_35",
+      "_type": "request",
+      "parentId": "fld_4",
+      "name": "Sin posición → 400 CampoObligatorioException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 34,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"nombre\": \"Fantasma\",\n  \"bando\": \"T\"\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_36",
+      "_type": "request",
+      "parentId": "fld_4",
+      "name": "Id inexistente → 404 JugadorNoEncontradoException",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/jugadores/9999",
+      "description": "Respuesta esperada: 404",
+      "metaSortKey": 35,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_37",
+      "_type": "request",
+      "parentId": "fld_5",
+      "name": "Explotar la HE en (0, 0, 0)",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones",
+      "description": "Respuesta esperada: 200.\n\nRegla 1 (daño): Fénix 100→14, Halcón (con chaleco) 100→81, Lobo queda ELIMINADO y Cuervo está fuera del radio.\nRegla 2 (empuje): Galil AR vuela 4,5 m hasta (6.5, 0, 0) y P250, que está en el centro, sale 6 m hacia arriba; Tec-9 está lejos y no se mueve.\n\nSi antes creaste FAMAS (carpeta 1) y Tigre (carpeta 3), también aparecen: FAMAS vuela 4.94 m hasta (4.49, 4.49, 0) y Tigre (con chaleco, a 6 m) queda con 87 de vida.",
+      "metaSortKey": 36,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"granadaId\": {{ _.granadaId }},\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_38",
+      "_type": "request",
+      "parentId": "fld_5",
+      "name": "Ver jugadores después",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/jugadores",
+      "description": "Respuesta esperada: 200 con las vidas actualizadas",
+      "metaSortKey": 37,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_39",
+      "_type": "request",
+      "parentId": "fld_5",
+      "name": "Ver armas después (posiciones nuevas)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 200: Galil AR en (6.5, 0, 0), P250 en (0, 0, 6) y la HE como DETONADA",
+      "metaSortKey": 38,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_40",
+      "_type": "request",
+      "parentId": "fld_6",
+      "name": "Explotar otra vez la misma HE → 409 GranadaYaDetonadaException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones",
+      "description": "Respuesta esperada: 409 (la granada se consume)",
+      "metaSortKey": 39,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"granadaId\": {{ _.granadaId }},\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_41",
+      "_type": "request",
+      "parentId": "fld_6",
+      "name": "Explotar un rifle → 400 ArmaNoExplosivaException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones",
+      "description": "Respuesta esperada: 400 (id 2 = M4A1-S)",
+      "metaSortKey": 40,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"granadaId\": 2,\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_42",
+      "_type": "request",
+      "parentId": "fld_6",
+      "name": "Granada inexistente → 404 ArmaNoEncontradaException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones",
+      "description": "Respuesta esperada: 404",
+      "metaSortKey": 41,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"granadaId\": 9999,\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_43",
+      "_type": "request",
+      "parentId": "fld_6",
+      "name": "Falta una coordenada → 400 CampoObligatorioException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones",
+      "description": "Respuesta esperada: 400 (falta 'z')",
+      "metaSortKey": 42,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"granadaId\": {{ _.granadaId }},\n  \"x\": 0,\n  \"y\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_44",
+      "_type": "request",
+      "parentId": "fld_6",
+      "name": "Falta granadaId → 400 CampoObligatorioException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 43,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_45",
+      "_type": "request",
+      "parentId": "fld_7",
+      "name": "Crear tienda",
+      "method": "POST",
+      "url": "{{ _.base_url }}/tienda?nombre=CT&saldo=5000",
+      "description": "Respuesta esperada: 201 con id tienda-0",
+      "metaSortKey": 44,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_46",
+      "_type": "request",
+      "parentId": "fld_7",
+      "name": "Tienda inexistente → 404 TiendaNoEncontradaException",
+      "method": "GET",
+      "url": "{{ _.base_url }}/tienda/tienda-99/catalogo",
+      "description": "Respuesta esperada: 404",
+      "metaSortKey": 45,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_47",
+      "_type": "request",
+      "parentId": "fld_7",
+      "name": "Saldo negativo → 400 SaldoInvalidoException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/tienda?nombre=CT&saldo=-1",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 46,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_48",
+      "_type": "request",
+      "parentId": "fld_7",
+      "name": "Tienda sin nombre → 400 ParametroFaltante",
+      "method": "POST",
+      "url": "{{ _.base_url }}/tienda",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 47,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_49",
+      "_type": "request",
+      "parentId": "fld_7",
+      "name": "Ráfaga de pistola",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas/rafaga?tipo=pistola&disparos=3",
+      "description": "Respuesta esperada: 200",
+      "metaSortKey": 48,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_50",
+      "_type": "request",
+      "parentId": "fld_7",
+      "name": "Ráfaga con una granada → 400 ArmaNoDisparaException",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas/rafaga?tipo=humo&disparos=3",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 49,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_51",
+      "_type": "request",
+      "parentId": "fld_7",
+      "name": "Ráfaga con 0 disparos → 400 CantidadDisparosInvalidaException",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas/rafaga?tipo=rifle&disparos=0",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 50,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_52",
+      "_type": "request",
+      "parentId": "fld_7",
+      "name": "Ráfaga con disparos=abc → 400 ParametroDeOtroTipo",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas/rafaga?tipo=rifle&disparos=abc",
+      "description": "Respuesta esperada: 400",
+      "metaSortKey": 51,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_53",
+      "_type": "request",
+      "parentId": "fld_7",
+      "name": "HUD de la AK-47",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ui/ak47",
+      "description": "Respuesta esperada: 200",
+      "metaSortKey": 52,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_54",
+      "_type": "request",
+      "parentId": "fld_7",
+      "name": "HUD inexistente → 404 ElementoUINoEncontradoException",
+      "method": "GET",
+      "url": "{{ _.base_url }}/ui/awp",
+      "description": "Respuesta esperada: 404",
+      "metaSortKey": 53,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_55",
+      "_type": "request",
+      "parentId": "fld_8",
+      "name": "Obtener el arma borrada → 404 ArmaNoEncontradaException",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas/{{ _.id }}",
+      "description": "Respuesta esperada: 404. Confirma que el DELETE la borró de la base.",
+      "metaSortKey": 101,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    }
+  ]
+}

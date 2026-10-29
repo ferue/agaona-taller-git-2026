@@ -447,3 +447,8 @@ FodyWeavers.xsd
 # Additional files built by Visual Studio
 
 # End of https://www.toptal.com/developers/gitignore/api/java,visualstudio,maven
+
+# Base de datos H2 local (cs2/data/cs2db.mv.db)
+cs2/data/
+*.mv.db
+*.trace.db

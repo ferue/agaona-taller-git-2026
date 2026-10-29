@@ -1,10 +1,22 @@
 package py.edu.uc.lp3.ag.cs2.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "rifles")
 public class Rifle extends ArmaDeFuego {
     public static final int CARGADOR_POR_DEFECTO = 30;
     public static final int DANO_POR_DEFECTO = 36;
 
-    private final boolean tieneMira;
+    @Column(nullable = false)
+    private boolean tieneMira;
+
+    /** Solo para JPA. */
+    protected Rifle() {
+        super();
+    }
 
     // Constructor sobrecargado: rifle de asalto estándar sin mira
     public Rifle(String nombre, int precio, String bando) {
@@ -36,6 +48,12 @@ public class Rifle extends ArmaDeFuego {
     @Override
     public String emitirSonidoInspeccion() {
         return "clack-clack_metalico_rifle.wav";
+    }
+
+    @Override
+    public void actualizarCon(Arma datos) {
+        super.actualizarCon(datos);
+        this.tieneMira = ((Rifle) datos).tieneMira;
     }
 
     public boolean isTieneMira() {

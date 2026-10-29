@@ -9,6 +9,8 @@ import py.edu.uc.lp3.ag.cs2.domain.ArmaDeFuego;
 import py.edu.uc.lp3.ag.cs2.domain.GranadaHumo;
 import py.edu.uc.lp3.ag.cs2.domain.Pistola;
 import py.edu.uc.lp3.ag.cs2.domain.Rifle;
+import py.edu.uc.lp3.ag.cs2.exception.negocio.ArmaNoDisparaException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.CantidadDisparosInvalidaException;
 import py.edu.uc.lp3.ag.cs2.rest.response.ArmaResponse;
 import py.edu.uc.lp3.ag.cs2.service.FabricaArmas;
 
@@ -62,11 +64,11 @@ public class ArmaController {
             @RequestParam(defaultValue = "5") int disparos) {
 
         if (disparos < 1 || disparos > MAX_DISPAROS) {
-            throw new IllegalArgumentException("disparos debe estar entre 1 y " + MAX_DISPAROS);
+            throw new CantidadDisparosInvalidaException(disparos, MAX_DISPAROS);
         }
         Arma arma = FabricaArmas.crear(tipo, tipo.toUpperCase(), 0, "T");
         if (!(arma instanceof ArmaDeFuego armaDeFuego)) {
-            throw new IllegalArgumentException("Solo las armas de fuego disparan; tipo recibido: " + tipo);
+            throw new ArmaNoDisparaException(tipo);
         }
 
         List<String> resultados = new ArrayList<>();

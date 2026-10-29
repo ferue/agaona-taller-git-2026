@@ -1,23 +1,42 @@
 package py.edu.uc.lp3.ag.cs2.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.CargadorInvalidoException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.DanoInvalidoException;
+
 /**
  * Arma que dispara munición desde un cargador.
  *
  * Invariantes: cargadorCapacidad > 0, danoBase > 0 y
  * 0 <= municionRestante <= cargadorCapacidad.
  */
+@Entity
+@Table(name = "armas_de_fuego")
 public abstract class ArmaDeFuego extends Arma {
-    private final int cargadorCapacidad;
-    private final int danoBase;
+
+    @Column(nullable = false)
+    private int cargadorCapacidad;
+
+    @Column(nullable = false)
+    private int danoBase;
+
+    @Column(nullable = false)
     private int municionRestante;
+
+    /** Solo para JPA: los atributos se completan con los valores de la base. */
+    protected ArmaDeFuego() {
+        super();
+    }
 
     protected ArmaDeFuego(String nombre, int precio, String bando, int cargadorCapacidad, int danoBase) {
         super(nombre, precio, bando);
         if (cargadorCapacidad <= 0) {
-            throw new IllegalArgumentException("La capacidad del cargador debe ser mayor a 0: " + cargadorCapacidad);
+            throw new CargadorInvalidoException(cargadorCapacidad);
         }
         if (danoBase <= 0) {
-            throw new IllegalArgumentException("El daño base debe ser mayor a 0: " + danoBase);
+            throw new DanoInvalidoException("El daño base debe ser mayor a 0", danoBase);
         }
         this.cargadorCapacidad = cargadorCapacidad;
         this.danoBase = danoBase;
@@ -38,6 +57,16 @@ public abstract class ArmaDeFuego extends Arma {
         }
         municionRestante = cargadorCapacidad;
         return "Recargando " + getNombre() + "... Munición: " + municionRestante + "/" + cargadorCapacidad;
+    }
+
+    /** Copia cargador y daño; el arma actualizada queda con el cargador lleno. */
+    @Override
+    public void actualizarCon(Arma datos) {
+        super.actualizarCon(datos);
+        ArmaDeFuego otra = (ArmaDeFuego) datos;
+        this.cargadorCapacidad = otra.cargadorCapacidad;
+        this.danoBase = otra.danoBase;
+        this.municionRestante = otra.cargadorCapacidad;
     }
 
     public int getCargadorCapacidad() { return cargadorCapacidad; }

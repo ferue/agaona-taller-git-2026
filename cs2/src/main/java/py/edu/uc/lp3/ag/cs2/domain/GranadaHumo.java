@@ -1,13 +1,26 @@
 package py.edu.uc.lp3.ag.cs2.domain;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.DuracionHumoInvalidaException;
+
 /**
  * Granada de humo. Invariante: duracionHumo > 0 segundos.
  */
+@Entity
+@Table(name = "granadas_humo")
 public class GranadaHumo extends Granada {
     public static final float RETARDO_POR_DEFECTO = 1.5f;
     public static final float DURACION_POR_DEFECTO = 18.0f;
 
-    private final float duracionHumo;
+    @Column(nullable = false)
+    private float duracionHumo;
+
+    /** Solo para JPA. */
+    protected GranadaHumo() {
+        super();
+    }
 
     // Constructor sobrecargado: valores estándar de CS2
     public GranadaHumo(String nombre, int precio, String bando) {
@@ -17,7 +30,7 @@ public class GranadaHumo extends Granada {
     public GranadaHumo(String nombre, int precio, String bando, float tiempoRetardo, float duracionHumo) {
         super(nombre, precio, bando, tiempoRetardo);
         if (duracionHumo <= 0) {
-            throw new IllegalArgumentException("La duración del humo debe ser mayor a 0: " + duracionHumo);
+            throw new DuracionHumoInvalidaException(duracionHumo);
         }
         this.duracionHumo = duracionHumo;
     }
@@ -35,6 +48,12 @@ public class GranadaHumo extends Granada {
     @Override
     public String obtenerIconoHud() {
         return "ui/hud/icons/smoke_grenade.png";
+    }
+
+    @Override
+    public void actualizarCon(Arma datos) {
+        super.actualizarCon(datos);
+        this.duracionHumo = ((GranadaHumo) datos).duracionHumo;
     }
 
     public float getDuracionHumo() {

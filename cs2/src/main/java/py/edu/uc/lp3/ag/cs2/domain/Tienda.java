@@ -1,9 +1,11 @@
 package py.edu.uc.lp3.ag.cs2.domain;
 
+import py.edu.uc.lp3.ag.cs2.exception.validacion.CampoObligatorioException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.SaldoInvalidoException;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * Tienda (buy menu) con un saldo y un catálogo de armas.
@@ -25,17 +27,20 @@ public class Tienda {
 
     public Tienda(String nombre, int saldoInicial) {
         if (nombre == null || nombre.isBlank()) {
-            throw new IllegalArgumentException("El nombre de la tienda es obligatorio");
+            throw new CampoObligatorioException("nombre");
         }
         if (saldoInicial < 0) {
-            throw new IllegalArgumentException("El saldo inicial no puede ser negativo: " + saldoInicial);
+            throw new SaldoInvalidoException(saldoInicial);
         }
         this.nombre = nombre.trim();
         this.saldo = saldoInicial;
     }
 
     public void agregarArma(Arma arma) {
-        armasDisponibles.add(Objects.requireNonNull(arma, "El arma no puede ser nula"));
+        if (arma == null) {
+            throw new CampoObligatorioException("arma");
+        }
+        armasDisponibles.add(arma);
     }
 
     public ResultadoCompra comprarArma(int indice) {

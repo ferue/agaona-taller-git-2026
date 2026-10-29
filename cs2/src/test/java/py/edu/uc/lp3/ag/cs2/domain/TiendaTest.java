@@ -2,6 +2,8 @@ package py.edu.uc.lp3.ag.cs2.domain;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.CampoObligatorioException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.SaldoInvalidoException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -58,9 +60,9 @@ class TiendaTest {
     @Test
     @DisplayName("Invariantes de la tienda")
     void invariantes() {
-        assertThrows(IllegalArgumentException.class, () -> new Tienda("CT", -1));
-        assertThrows(IllegalArgumentException.class, () -> new Tienda(" ", 100));
-        assertThrows(NullPointerException.class, () -> new Tienda().agregarArma(null));
+        assertThrows(SaldoInvalidoException.class, () -> new Tienda("CT", -1));
+        assertThrows(CampoObligatorioException.class, () -> new Tienda(" ", 100));
+        assertThrows(CampoObligatorioException.class, () -> new Tienda().agregarArma(null));
     }
 
     @Test
