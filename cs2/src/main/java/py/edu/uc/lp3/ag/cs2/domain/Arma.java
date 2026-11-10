@@ -134,6 +134,12 @@ public abstract class Arma implements UICapable {
         return "ui/hud/icons/default_weapon.png";
     }
 
+    /** Etiqueta del HUD: nombre del arma y, si tiene, su skin. */
+    @Override
+    public String etiquetaHud() {
+        return tieneSkinPersonalizada() ? nombre + " | " + skin : nombre;
+    }
+
     // Solo getters: el estado no se puede modificar desde afuera sin pasar por las reglas.
     public Long getId() { return id; }
     public String getNombre() { return nombre; }

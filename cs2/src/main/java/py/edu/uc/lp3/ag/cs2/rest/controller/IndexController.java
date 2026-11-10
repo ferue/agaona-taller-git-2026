@@ -28,6 +28,7 @@ public class IndexController {
                 "GET    /api/jugadores/{id}   (obtener jugador)",
                 "POST   /api/jugadores        (crear jugador, cuerpo JSON)",
                 "POST   /api/explosiones      (explota una granada HE: {granadaId, x, y, z})",
+                "GET    /api/hud              (protocolo UICapable: armas y jugadores de la base)",
                 "POST /tienda?nombre=CT&saldo=5000",
                 "POST /tienda/{id}/agregar-arma?tipo=rifle&nombre=M4A1-S&precio=2900&bando=CT",
                 "GET  /tienda/{id}/catalogo",

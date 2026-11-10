@@ -11,16 +11,21 @@ import py.edu.uc.lp3.ag.cs2.exception.validacion.CampoObligatorioException;
 import py.edu.uc.lp3.ag.cs2.exception.validacion.DanoInvalidoException;
 import py.edu.uc.lp3.ag.cs2.exception.validacion.VidaInvalidaException;
 
+import java.util.Locale;
+
 /**
  * Jugador en el mapa. Participa en la simulación de explosiones.
  *
  * Invariantes: nombre y bando obligatorios, 0 <= vida <= 100 y siempre
  * tiene una posición. La vida solo baja con recibirDano(...), que nunca la
  * deja por debajo de 0.
+ *
+ * Implementa UICapable, igual que Arma: dos familias distintas con el mismo
+ * protocolo de HUD (lo usa GET /api/hud).
  */
 @Entity
 @Table(name = "jugadores")
-public class Jugador {
+public class Jugador implements UICapable {
     public static final int VIDA_MAXIMA = 100;
     /** El chaleco (kevlar) deja pasar la mitad del daño de una explosión. */
     public static final double FACTOR_CHALECO = 0.5;
@@ -83,6 +88,28 @@ public class Jugador {
 
     public boolean estaVivo() {
         return vida > 0;
+    }
+
+    // ===== Protocolo UICapable =====
+
+    /** El icono depende del bando y de si sigue vivo. */
+    @Override
+    public String obtenerIconoHud() {
+        if (!estaVivo()) {
+            return "ui/hud/icons/player_dead.png";
+        }
+        return "CT".equals(bando) ? "ui/hud/icons/player_ct.png" : "ui/hud/icons/player_t.png";
+    }
+
+    @Override
+    public String etiquetaHud() {
+        return nombre + " (" + bando + ") " + (estaVivo() ? vida + " HP" : "ELIMINADO");
+    }
+
+    /** Redefine el método default de UICapable: el jugador responde por radio. */
+    @Override
+    public String emitirSonidoInspeccion() {
+        return estaVivo() ? "radio_" + bando.toLowerCase(Locale.ROOT) + "_listo.wav" : "silencio.wav";
     }
 
     public Long getId() { return id; }

@@ -36,6 +36,21 @@ class JugadorTest {
     }
 
     @Test
+    @DisplayName("Jugador cumple el protocolo UICapable igual que un arma")
+    void protocoloHud() {
+        UICapable ct = new Jugador("Fénix", "CT", P);
+        UICapable eliminado = new Jugador("Lobo", "T", 0, false, P);
+        UICapable arma = new Rifle("AK-47", 2700, "T");
+
+        assertEquals("ui/hud/icons/player_ct.png", ct.obtenerIconoHud());
+        assertEquals("Fénix (CT) 100 HP", ct.etiquetaHud());
+        assertEquals("radio_ct_listo.wav", ct.emitirSonidoInspeccion());
+        assertEquals("ui/hud/icons/player_dead.png", eliminado.obtenerIconoHud());
+        assertEquals("Lobo (T) ELIMINADO", eliminado.etiquetaHud());
+        assertEquals("AK-47", arma.etiquetaHud());
+    }
+
+    @Test
     @DisplayName("Invariantes del jugador")
     void invariantes() {
         assertThrows(VidaInvalidaException.class, () -> new Jugador("D", "T", 150, false, P));
