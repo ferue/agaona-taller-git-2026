@@ -9,7 +9,7 @@
       "_type": "workspace",
       "parentId": null,
       "name": "CS2 - CRUD de Armas (LP3 CYT646)",
-      "description": "CRUD de Arma persistido en H2 + simulación de explosiones con granada HE (GranadaHE, Jugador, Posicion). Cada error tiene su propia excepción y su handler. Correr las carpetas en orden con la base recién creada (borrar cs2/data para empezar de cero).",
+      "description": "POO-08 – CRUD de Arma persistido en H2, simulación de explosión con granada HE (GranadaHE, Jugador, Posicion), endpoint del protocolo UICapable y un pedido por cada excepción. Correr las carpetas en orden con la base recién creada (borrar cs2/data).",
       "scope": "collection"
     },
     {
@@ -71,15 +71,22 @@
       "_id": "fld_7",
       "_type": "request_group",
       "parentId": "wrk_cs2_crud",
-      "name": "7. Tienda, ráfaga y HUD",
-      "metaSortKey": 6
+      "name": "8. Tienda, ráfaga y /ui",
+      "metaSortKey": 7
     },
     {
       "_id": "fld_8",
       "_type": "request_group",
       "parentId": "wrk_cs2_crud",
-      "name": "8. Eliminar (al final)",
-      "metaSortKey": 7
+      "name": "9. Eliminar (al final)",
+      "metaSortKey": 8
+    },
+    {
+      "_id": "fld_9",
+      "_type": "request_group",
+      "parentId": "wrk_cs2_crud",
+      "name": "7. HUD - interfaz UICapable",
+      "metaSortKey": 6
     },
     {
       "_id": "req_01",
@@ -1118,6 +1125,48 @@
       "url": "{{ _.base_url }}/api/armas/{{ _.id }}",
       "description": "Respuesta esperada: 404. Confirma que el DELETE la borró de la base.",
       "metaSortKey": 101,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_56",
+      "_type": "request",
+      "parentId": "fld_1",
+      "name": "Servicio vivo (GET /)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/",
+      "description": "Respuesta esperada: 200 con estado OK y la lista de endpoints",
+      "metaSortKey": -1,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_57",
+      "_type": "request",
+      "parentId": "fld_2",
+      "name": "Contar armas: los POST ilegales no guardaron nada",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 200 con las mismas 14 armas que había antes de esta carpeta: ningún POST ilegal dejó basura en la base",
+      "metaSortKey": 999,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_58",
+      "_type": "request",
+      "parentId": "fld_9",
+      "name": "HUD: armas y jugadores como UICapable (GET /api/hud)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/hud",
+      "description": "Respuesta esperada: 200. Una lista con armas y jugadores de la base; el controller solo usa los mensajes de UICapable (obtenerIconoHud, etiquetaHud, emitirSonidoInspeccion). Después de la explosión, Lobo aparece con player_dead.png y 'ELIMINADO'",
+      "metaSortKey": 0,
       "headers": [],
       "body": {},
       "parameters": [],
