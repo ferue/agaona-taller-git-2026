@@ -1,4 +1,4 @@
-# Bitácora de Desarrollo — Taller POO-06 (Counter-Strike 2)
+# Bitácora de Desarrollo — Taller LP3: POO-06 y POO-08 (Counter-Strike 2)
 
 **Asignatura:** Lenguaje de Programación 3 (CYT646)  
 **Edición:** 2026  
@@ -7,7 +7,19 @@
 
 ---
 
-## 🤖 Información de Asistencia de IA
+## 📋 Resumen: asistentes y modelos usados
+
+| Sesión | Fecha | Asistente / herramienta | Modelo exacto (como lo muestra la herramienta) |
+|---|---|---|---|
+| 1 | septiembre 2026 | Gemini (Google), web, free tier | Gemini 3 Flash |
+| 2 | 21/10/2026 | Claude (Anthropic), mediante Claude Code | Claude Opus 5.5 |
+| 3 | 28/10/2026 | Claude (Anthropic), mediante Claude Code | `claude-opus-5-5` (Claude Opus 5.5) |
+| 4 | 29/10/2026 | Claude (Anthropic), mediante Claude Code | `claude-opus-5-5` (Claude Opus 5.5) |
+| 5 | 10/11/2026 | Claude (Anthropic), mediante Claude Code | `claude-opus-5-5` (Claude Opus 5.5) |
+
+---
+
+## 🤖 Sesión 1 — Información de Asistencia de IA
 * **Asistente / Agente de IA:** Gemini (Google)
 * **Modelo de LLM exacto:** Gemini 3 Flash (Web)
 * **Modo de operación:** Free tier
@@ -78,7 +90,7 @@
 ## 🤖 Sesión 3 — CRUD REST con persistencia (28/10/2026)
 
 * **Asistente / Agente de IA:** Claude (Anthropic), mediante Claude Code
-* **Modelo de LLM exacto:** Claude Opus 5.5
+* **Modelo de LLM exacto:** Claude Opus 5.5 (`claude-opus-5-5`)
 * **Modo de trabajo:** la IA editó solo los archivos locales; el alumno hace los commits y el push.
 
 ### Resumen de prompts e interacciones
@@ -102,7 +114,7 @@
 ## 🤖 Sesión 4 — Simulación de explosiones y jerarquía de excepciones (29/10/2026)
 
 * **Asistente / Agente de IA:** Claude (Anthropic), mediante Claude Code
-* **Modelo de LLM exacto:** Claude Opus 5.5
+* **Modelo de LLM exacto:** Claude Opus 5.5 (`claude-opus-5-5`)
 * **Modo de trabajo:** la IA editó solo los archivos locales; el alumno hace los commits y el push.
 
 ### Resumen de prompts e interacciones
@@ -121,4 +133,31 @@
 * En el entorno de la IA no había acceso a Maven Central, así que se usaron las librerías que Maven ya había descargado en la notebook del alumno (carpeta `.m2`, solo lectura) para correr Maven sin conexión con JDK 21.
 * `mvn test`: **51 tests, 0 fallas, BUILD SUCCESS** con Spring Boot, Hibernate y H2 reales.
 * Se levantó la app con la base recién creada y se ejecutaron en orden las 55 peticiones de la colección de Insomnia: todas respondieron el código y el tipo de excepción esperados.
-* Falta que el alumno lo repita en su notebook (`.\mvnw.cmd test` y la colección) antes del commit.
+* Estos cambios se subieron en el commit `e2e22e3` (29/10/2026).
+
+---
+
+## 🤖 Sesión 5 — Cierre del Ejercicio POO-08 (10/11/2026)
+
+* **Asistente / Agente de IA:** Claude (Anthropic), mediante Claude Code
+* **Modelo de LLM exacto:** Claude Opus 5.5 (`claude-opus-5-5`)
+* **Modo de trabajo:** la IA editó solo los archivos locales; el alumno hace los commits y el push.
+
+### Resumen de prompts e interacciones
+
+12. **Revisión contra el enunciado y la rúbrica del POO-08:**
+    * *Prompt:* Comparar el repositorio con el enunciado `ejercicio-poo-08-crud-h2-insomnia`, la rúbrica y el template de paquetes, decir qué falta antes de modificar nada, y preparar los entregables: README, bitácora, colección de Insomnia y especificaciones en Markdown y PDF.
+    * *Decisiones del alumno:* no reescribir el historial ya publicado (los cambios nuevos van en commits separados) y entregar las especificaciones en `.md` y en PDF.
+    * *Acción:*
+      * `Jugador` implementa `UICapable`, así el protocolo de POO-07 lo cumplen dos familias distintas. Se agregó el mensaje `etiquetaHud()` y el endpoint `GET /api/hud` (`HudController` + `HudService`), que lee armas y jugadores de H2 y les habla solo como `UICapable`.
+      * Las dos reglas pasan a ser mensajes de `GranadaHE`: `danar(jugador, centro)` y `empujar(arma, centro)`. `ExplosionService` solo busca, recorre y persiste.
+      * Tests nuevos para los mensajes de la granada, el protocolo en `Jugador` y `HudController`.
+      * Insomnia: `GET /`, el pedido del HUD y un *contar armas* después de los POST ilegales (58 pedidos en 9 carpetas).
+      * README: enlace al commit del POO-08, recorrido rápido, cada propiedad de H2 en una frase, sección del protocolo, excepciones comprobadas y no comprobadas, respuestas a «Qué hay que pensar» y diagrama Mermaid de capas, repositorio, controller y excepciones.
+      * Especificaciones para Classroom: `docs/especificaciones-poo-08.md` y su PDF.
+
+### Verificación realizada
+* `mvn test` con las librerías de la notebook del alumno, sin conexión y con JDK 21: **55 tests, 0 fallas, BUILD SUCCESS**.
+* App levantada con la base recién creada y los 58 pedidos de la colección ejecutados en orden: todos respondieron el código y el tipo de excepción esperados. Después de los POST ilegales siguen siendo 14 armas.
+* Los dos diagramas Mermaid del README se generaron con `mmdc` sin errores.
+
