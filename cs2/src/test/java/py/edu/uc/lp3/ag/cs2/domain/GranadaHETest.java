@@ -47,6 +47,43 @@ class GranadaHETest {
     }
 
     @Test
+    @DisplayName("Regla 1: danar aplica el daño según la distancia y el chaleco, solo a jugadores vivos en el radio")
+    void regla1Danar() {
+        Posicion centro = new Posicion(0, 0, 0);
+        Jugador cerca = new Jugador("Cerca", "CT", new Posicion(1, 0, 0));
+        Jugador conChaleco = new Jugador("Chaleco", "T", 100, true, new Posicion(3, 4, 0));
+        Jugador lejos = new Jugador("Lejos", "T", new Posicion(12, 0, 0));
+
+        GranadaHE.Impacto impacto = he.danar(cerca, centro).orElseThrow();
+        assertEquals(86, impacto.danoRecibido());
+        assertEquals(14, cerca.getVida());
+        assertEquals(19, he.danar(conChaleco, centro).orElseThrow().danoRecibido());   // 37 a la mitad
+        assertTrue(he.danar(lejos, centro).isEmpty());
+        assertEquals(100, lejos.getVida());
+
+        Jugador muerto = new Jugador("Muerto", "T", 0, false, new Posicion(0, 0, 0));
+        assertTrue(he.danar(muerto, centro).isEmpty());
+    }
+
+    @Test
+    @DisplayName("Regla 2: empujar aleja las armas del mapa dentro del radio y deja quietas las demás")
+    void regla2Empujar() {
+        Posicion centro = new Posicion(0, 0, 0);
+        Rifle galil = new Rifle("Galil AR", 1800, "T");
+        galil.ubicarEn(new Posicion(2, 0, 0));
+        Rifle lejos = new Rifle("Lejos", 1800, "T");
+        lejos.ubicarEn(new Posicion(20, 0, 0));
+        Rifle enCatalogo = new Rifle("Catálogo", 1800, "T");
+
+        GranadaHE.Desplazamiento d = he.empujar(galil, centro).orElseThrow();
+        assertEquals(4.5, d.metros(), 1e-9);
+        assertEquals(new Posicion(6.5, 0, 0), galil.getPosicion());
+        assertTrue(he.empujar(lejos, centro).isEmpty());
+        assertTrue(he.empujar(enCatalogo, centro).isEmpty());
+        assertTrue(he.empujar(he, centro).isEmpty());   // no se empuja a sí misma
+    }
+
+    @Test
     @DisplayName("Invariantes y herencia")
     void invariantes() {
         assertThrows(RadioExplosionInvalidoException.class, () -> new GranadaHE("X", 300, "CT", 1.6f, 0f, 98, 6f));

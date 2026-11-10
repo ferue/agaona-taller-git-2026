@@ -17,8 +17,11 @@ import java.util.List;
 
 /**
  * Simulación de la explosión de una granada HE. Participan tres clases del
- * modelo: GranadaHE (calcula daño y empuje), Jugador (recibe el daño) y
- * Posicion (mide distancias y calcula a dónde vuela un arma).
+ * modelo: GranadaHE (las dos reglas, danar y empujar), Jugador (recibe el daño)
+ * y Posicion (mide distancias y calcula a dónde vuela un arma).
+ *
+ * Este service no calcula nada: busca los objetos en la base, le pide a la
+ * granada que aplique cada regla y deja que la transacción guarde los cambios.
  *
  * Regla 1 – Daño: la HE daña a todos los jugadores vivos dentro de su radio,
  * aliados incluidos; el daño baja con la distancia y el chaleco lo reduce a la mitad.
@@ -46,8 +49,8 @@ public class ExplosionService {
         GranadaHE granada = buscarGranada(granadaId);
         granada.detonar();
 
-        List<ResultadoExplosion.Impacto> impactos = aplicarDano(granada, centro);
-        List<ResultadoExplosion.Desplazamiento> desplazamientos = empujarArmas(granada, centro);
+        List<GranadaHE.Impacto> impactos = aplicarDano(granada, centro);
+        List<GranadaHE.Desplazamiento> desplazamientos = empujarArmas(granada, centro);
 
         return new ResultadoExplosion(granada, centro, impactos, desplazamientos);
     }
@@ -62,38 +65,20 @@ public class ExplosionService {
         return granada;
     }
 
-    /** Regla 1. */
-    private List<ResultadoExplosion.Impacto> aplicarDano(GranadaHE granada, Posicion centro) {
-        List<ResultadoExplosion.Impacto> impactos = new ArrayList<>();
+    /** Regla 1: se la pide a la granada para cada jugador. */
+    private List<GranadaHE.Impacto> aplicarDano(GranadaHE granada, Posicion centro) {
+        List<GranadaHE.Impacto> impactos = new ArrayList<>();
         for (Jugador jugador : jugadorRepository.findAll(Sort.by("id"))) {
-            double distancia = jugador.getPosicion().distanciaA(centro);
-            if (!jugador.estaVivo() || !granada.alcanza(distancia)) {
-                continue;
-            }
-            int danoCalculado = granada.calcularDano(distancia);
-            int danoRecibido = jugador.recibirDano(danoCalculado);
-            impactos.add(new ResultadoExplosion.Impacto(jugador, distancia, danoCalculado, danoRecibido));
+            granada.danar(jugador, centro).ifPresent(impactos::add);
         }
         return impactos;
     }
 
-    /** Regla 2. */
-    private List<ResultadoExplosion.Desplazamiento> empujarArmas(GranadaHE granada, Posicion centro) {
-        List<ResultadoExplosion.Desplazamiento> desplazamientos = new ArrayList<>();
+    /** Regla 2: se la pide a la granada para cada arma. */
+    private List<GranadaHE.Desplazamiento> empujarArmas(GranadaHE granada, Posicion centro) {
+        List<GranadaHE.Desplazamiento> desplazamientos = new ArrayList<>();
         for (Arma arma : armaRepository.findAll(Sort.by("id"))) {
-            if (!arma.estaEnElMapa() || arma.getId().equals(granada.getId())) {
-                continue;
-            }
-            Posicion desde = arma.getPosicion();
-            double distancia = desde.distanciaA(centro);
-            if (!granada.alcanza(distancia)) {
-                continue;
-            }
-            double metros = granada.calcularEmpuje(distancia);
-            Posicion hasta = desde.desplazarDesde(centro, metros);
-            arma.ubicarEn(hasta);
-            desplazamientos.add(new ResultadoExplosion.Desplazamiento(
-                    arma.getId(), arma.getNombre(), arma.getClass().getSimpleName(), desde, hasta, metros));
+            granada.empujar(arma, centro).ifPresent(desplazamientos::add);
         }
         return desplazamientos;
     }

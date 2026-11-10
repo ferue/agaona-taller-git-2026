@@ -35,7 +35,8 @@ public record ExplosionResponse(
                         i.jugador().estaVivo() ? "VIVO" : "ELIMINADO"))
                 .toList();
         List<ArmaDesplazada> armas = r.armasDesplazadas().stream()
-                .map(d -> new ArmaDesplazada(d.armaId(), d.nombre(), d.tipo(),
+                .map(d -> new ArmaDesplazada(d.arma().getId(), d.arma().getNombre(),
+                        d.arma().getClass().getSimpleName(),
                         PosicionResponse.de(d.desde()), PosicionResponse.de(d.hasta()),
                         PosicionResponse.redondear(d.metros())))
                 .toList();
