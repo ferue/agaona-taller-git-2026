@@ -7,7 +7,7 @@
 | **Ejercicio** | POO-08 — CRUD REST, H2, reglas de juego y excepciones |
 | **Dominio** | Counter-Strike 2 (simulación de **daño**) |
 | **Repositorio** | https://github.com/ferue/agaona-taller-git-2026 |
-| **Commit de la solución** | _Pendiente: se completa con el enlace al commit._ |
+| **Commit de la solución** | https://github.com/ferue/agaona-taller-git-2026/commit/8b5e44e5a1dad762733e83b02bf0f025d1aa0e26 |
 
 ---
 

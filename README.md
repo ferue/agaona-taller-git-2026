@@ -8,7 +8,9 @@
 
 ### 🔗 Commit de la entrega (Ejercicio POO-08 — CRUD, H2 e Insomnia)
 
-_Pendiente: se completa con el enlace al commit de la solución._
+https://github.com/ferue/agaona-taller-git-2026/commit/8b5e44e5a1dad762733e83b02bf0f025d1aa0e26
+
+Este commit tiene la solución completa del POO-08: el código, los tests, la colección de Insomnia, este README, la bitácora y las especificaciones. El commit posterior solo agrega este enlace.
 
 Las especificaciones aplicadas a este dominio están en [`docs/especificaciones-poo-08.md`](docs/especificaciones-poo-08.md).
 
