@@ -11,15 +11,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import py.edu.uc.lp3.ag.cs2.domain.Arma;
-import py.edu.uc.lp3.ag.cs2.domain.ArmaDeFuego;
-import py.edu.uc.lp3.ag.cs2.domain.GranadaHumo;
-import py.edu.uc.lp3.ag.cs2.domain.Pistola;
-import py.edu.uc.lp3.ag.cs2.domain.Rifle;
-import py.edu.uc.lp3.ag.cs2.exception.negocio.ArmaNoDisparaException;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.CantidadDisparosInvalidaException;
 import py.edu.uc.lp3.ag.cs2.rest.response.ArmaResponse;
-import py.edu.uc.lp3.ag.cs2.service.FabricaArmas;
+import py.edu.uc.lp3.ag.cs2.service.DemostracionArmasService;
+import py.edu.uc.lp3.ag.cs2.service.DemostracionArmasService.ResultadoPolimorfismo;
+import py.edu.uc.lp3.ag.cs2.service.DemostracionArmasService.ResultadoPrueba;
+import py.edu.uc.lp3.ag.cs2.service.DemostracionArmasService.ResultadoRafaga;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -31,13 +27,13 @@ import java.util.Map;
 @RequestMapping("/api/armas")
 public class ArmaController {
 
-    public static final int MAX_DISPAROS = 100;
+    private final DemostracionArmasService demostracionService;
 
-    /**
-     * Construye un arma y ejecuta su acción principal.
-     * Si llega "skin" se aplica con aplicarSkin(String); si además llega
-     * "statTrak" se usa la sobrecarga aplicarSkin(String, boolean).
-     */
+    public ArmaController(DemostracionArmasService demostracionService) {
+        this.demostracionService = demostracionService;
+    }
+
+    /** Construye un arma (con skin opcional) y ejecuta su acción principal. */
     @Operation(summary = "Probar un arma",
             description = "Crea un arma en memoria (no la guarda) y ejecuta su acción principal.")
     @ApiResponses({
@@ -54,18 +50,11 @@ public class ArmaController {
             @RequestParam(required = false) String skin,
             @RequestParam(required = false) Boolean statTrak) {
 
-        Arma arma = FabricaArmas.crear(tipo, nombre, precio, bando);
-        if (skin != null) {
-            if (statTrak == null) {
-                arma.aplicarSkin(skin);
-            } else {
-                arma.aplicarSkin(skin, statTrak);
-            }
-        }
+        ResultadoPrueba r = demostracionService.probar(tipo, nombre, precio, bando, skin, statTrak);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("arma", ArmaResponse.de(arma));
-        response.put("resultadoAccion", arma.ejecutarAccionPrincipal());
+        response.put("arma", ArmaResponse.de(r.arma()));
+        response.put("resultadoAccion", r.resultadoAccion());
         return response;
     }
 
@@ -85,34 +74,18 @@ public class ArmaController {
             @RequestParam(defaultValue = "pistola") String tipo,
             @RequestParam(defaultValue = "5") int disparos) {
 
-        if (disparos < 1 || disparos > MAX_DISPAROS) {
-            throw new CantidadDisparosInvalidaException(disparos, MAX_DISPAROS);
-        }
-        Arma arma = FabricaArmas.crear(tipo, tipo.toUpperCase(), 0, "T");
-        if (!(arma instanceof ArmaDeFuego armaDeFuego)) {
-            throw new ArmaNoDisparaException(tipo);
-        }
-
-        List<String> resultados = new ArrayList<>();
-        for (int i = 0; i < disparos; i++) {
-            resultados.add(armaDeFuego.disparar());
-        }
-        int municionAntesDeRecargar = armaDeFuego.getMunicionRestante();
-        String recarga = armaDeFuego.recargar();
+        ResultadoRafaga r = demostracionService.rafaga(tipo, disparos);
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("arma", ArmaResponse.de(arma));
-        response.put("disparos", resultados);
-        response.put("municionAntesDeRecargar", municionAntesDeRecargar);
-        response.put("recarga", recarga);
-        response.put("municionFinal", armaDeFuego.getMunicionRestante());
+        response.put("arma", ArmaResponse.de(r.arma()));
+        response.put("disparos", r.disparos());
+        response.put("municionAntesDeRecargar", r.municionAntesDeRecargar());
+        response.put("recarga", r.recarga());
+        response.put("municionFinal", r.municionFinal());
         return response;
     }
 
-    /**
-     * Recorre una List<Arma> y llama al mismo método en cada elemento:
-     * cada clase hija responde con su propia sobrescritura.
-     */
+    /** Polimorfismo: la misma lista de mensajes a cada clase hija (ver DemostracionArmasService). */
     @Operation(summary = "Ver polimorfismo",
             description = "Un rifle, una pistola y una granada de humo responden al mismo mensaje.")
     @ApiResponses({
@@ -120,18 +93,13 @@ public class ArmaController {
     })
     @GetMapping("/polimorfismo")
     public List<Map<String, Object>> polimorfismo() {
-        List<Arma> arsenal = List.of(
-                new Rifle("M4A4", 3100, "CT", 30, 33, true),
-                new Pistola("Glock-18", 200, "T", 20, 30, false),
-                new GranadaHumo("Smoke", 300, "CT/T"));
-
         List<Map<String, Object>> respuesta = new ArrayList<>();
-        for (Arma arma : arsenal) {
+        for (ResultadoPolimorfismo r : demostracionService.polimorfismo()) {
             Map<String, Object> item = new LinkedHashMap<>();
-            item.put("tipo", arma.getClass().getSimpleName());
-            item.put("detalles", arma.obtenerDetalles());
-            item.put("accionPrincipal", arma.ejecutarAccionPrincipal());
-            item.put("sonidoInspeccion", arma.emitirSonidoInspeccion());
+            item.put("tipo", r.tipo());
+            item.put("detalles", r.detalles());
+            item.put("accionPrincipal", r.accionPrincipal());
+            item.put("sonidoInspeccion", r.sonidoInspeccion());
             respuesta.add(item);
         }
         return respuesta;

@@ -6,8 +6,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 import py.edu.uc.lp3.ag.cs2.domain.Arma;
+import py.edu.uc.lp3.ag.cs2.domain.GranadaHE;
 import py.edu.uc.lp3.ag.cs2.domain.GranadaHumo;
 import py.edu.uc.lp3.ag.cs2.domain.Pistola;
+import py.edu.uc.lp3.ag.cs2.domain.Posicion;
 import py.edu.uc.lp3.ag.cs2.domain.Rifle;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.ArmaDuplicadaException;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.BandoInvalidoException;
@@ -15,6 +17,15 @@ import py.edu.uc.lp3.ag.cs2.exception.negocio.CambioDeTipoException;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.PrecioExcedidoException;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.SkinNoPermitidaException;
 import py.edu.uc.lp3.ag.cs2.exception.noencontrado.ArmaNoEncontradaException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.CampoObligatorioException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.CargadorInvalidoException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.CoordenadaInvalidaException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.DanoInvalidoException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.DuracionHumoInvalidaException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.EmpujeInvalidoException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.PrecioNegativoException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.RadioExplosionInvalidoException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.TiempoRetardoInvalidoException;
 import py.edu.uc.lp3.ag.cs2.repository.ArmaRepository;
 
 import java.util.List;
@@ -139,5 +150,39 @@ class ArmaServiceTest {
         armaService.eliminar(ak.getId());
         assertFalse(armaRepository.existsById(ak.getId()));
         assertEquals(1, armaService.listar().size());
+    }
+
+    @Test
+    @DisplayName("Invariantes: el service rechaza los datos inválidos que el dominio guarda sin validar")
+    void invariantes() {
+        assertThrows(PrecioNegativoException.class, () -> armaService.crear(new Rifle("AK-47", -1, "T")));
+        assertThrows(CampoObligatorioException.class, () -> armaService.crear(new Rifle(null, 100, "T")));
+        assertThrows(CampoObligatorioException.class, () -> armaService.crear(new Rifle("  ", 100, "T")));
+        assertThrows(CampoObligatorioException.class, () -> armaService.crear(new Rifle("AK-47", 100, null)));
+        assertThrows(CargadorInvalidoException.class, () -> armaService.crear(new Rifle("AK-47", 100, "T", 0, 36, false)));
+        assertThrows(DanoInvalidoException.class, () -> armaService.crear(new Pistola("P2000", 200, "CT", 13, -5, false)));
+        assertThrows(TiempoRetardoInvalidoException.class, () -> armaService.crear(new GranadaHumo("Smoke", 300, "CT", -1f, 18f)));
+        assertThrows(DuracionHumoInvalidaException.class, () -> armaService.crear(new GranadaHumo("Smoke", 300, "CT", 1.5f, 0f)));
+        assertThrows(RadioExplosionInvalidoException.class, () -> armaService.crear(new GranadaHE("X", 300, "CT", 1.6f, 0f, 98, 6f)));
+        assertThrows(DanoInvalidoException.class, () -> armaService.crear(new GranadaHE("X", 300, "CT", 1.6f, 8f, 0, 6f)));
+        assertThrows(EmpujeInvalidoException.class, () -> armaService.crear(new GranadaHE("X", 300, "CT", 1.6f, 8f, 98, -1f)));
+
+        Rifle sinSkin = new Rifle("AK-47", 2700, "T");
+        sinSkin.aplicarSkin("");
+        assertThrows(CampoObligatorioException.class, () -> armaService.crear(sinSkin));
+
+        Rifle fueraDelMapa = new Rifle("Scout", 1700, "CT");
+        fueraDelMapa.ubicarEn(new Posicion(Double.POSITIVE_INFINITY, 0, 0));
+        assertThrows(CoordenadaInvalidaException.class, () -> armaService.crear(fueraDelMapa));
+
+        assertEquals(0, armaRepository.count());   // nada inválido llegó a la base
+    }
+
+    @Test
+    @DisplayName("Un PUT con datos inválidos tampoco pasa")
+    void actualizarConDatosInvalidos() {
+        Arma ak = armaService.crear(new Rifle("AK-47", 2700, "T"));
+        assertThrows(PrecioNegativoException.class, () -> armaService.actualizar(ak.getId(), new Rifle("AK-47", -1, "T")));
+        assertEquals(2700, armaService.obtener(ak.getId()).getPrecio());
     }
 }

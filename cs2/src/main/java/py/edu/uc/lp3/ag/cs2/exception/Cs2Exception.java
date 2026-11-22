@@ -4,7 +4,7 @@ package py.edu.uc.lp3.ag.cs2.exception;
  * Raíz de la jerarquía de excepciones del proyecto.
  *
  * Todas las excepciones propias heredan de esta clase y se agrupan en cuatro ramas:
- * - DatoInvalidoException: un objeto del dominio recibió datos que rompen sus invariantes (400).
+ * - DatoInvalidoException: un dato rompe una invariante; lo detectan los services (400).
  * - RecursoNoEncontradoException: lo pedido no existe (404).
  * - ReglaNegocioException: los datos son válidos pero violan una regla del negocio (400 / 409).
  * - ServicioExternoException: falló una API ajena consumida con WebClient (502).

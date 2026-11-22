@@ -19,23 +19,24 @@ import org.springframework.web.bind.annotation.RestController;
 import py.edu.uc.lp3.ag.cs2.domain.Arma;
 import py.edu.uc.lp3.ag.cs2.domain.ResultadoCompra;
 import py.edu.uc.lp3.ag.cs2.domain.Tienda;
-import py.edu.uc.lp3.ag.cs2.exception.noencontrado.TiendaNoEncontradaException;
 import py.edu.uc.lp3.ag.cs2.rest.response.ArmaResponse;
-import py.edu.uc.lp3.ag.cs2.service.FabricaArmas;
+import py.edu.uc.lp3.ag.cs2.service.TiendaService;
+import py.edu.uc.lp3.ag.cs2.service.TiendaService.TiendaRegistrada;
 
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Tag(name = "Tienda (POO-06, en memoria)", description = "Tienda de compra de CS2 que vive en memoria (no se guarda en H2).")
 @RestController
 @RequestMapping("/tienda")
 public class TiendaController {
 
-    private final Map<String, Tienda> tiendas = new ConcurrentHashMap<>();
-    private final AtomicInteger contador = new AtomicInteger();
+    private final TiendaService tiendaService;
+
+    public TiendaController(TiendaService tiendaService) {
+        this.tiendaService = tiendaService;
+    }
 
     @Operation(summary = "Crear una tienda",
             description = "Crea una tienda con nombre y saldo inicial.")
@@ -49,12 +50,11 @@ public class TiendaController {
     public Map<String, Object> crearTienda(
             @RequestParam String nombre,
             @RequestParam(defaultValue = "5000") int saldo) {
-        Tienda tienda = new Tienda(nombre, saldo);
-        String id = "tienda-" + contador.getAndIncrement();
-        tiendas.put(id, tienda);
+        TiendaRegistrada registrada = tiendaService.crear(nombre, saldo);
+        Tienda tienda = registrada.tienda();
 
         Map<String, Object> response = new LinkedHashMap<>();
-        response.put("id", id);
+        response.put("id", registrada.id());
         response.put("nombre", tienda.getNombre());
         response.put("saldo", tienda.getSaldo());
         response.put("armasEnInventario", tienda.getCantidadArmas());
@@ -82,9 +82,9 @@ public class TiendaController {
             @RequestParam(defaultValue = "25") int danoBase,
             @RequestParam(defaultValue = "false") boolean atributoEspecial) {
 
-        Tienda tienda = buscarTienda(id);
-        Arma arma = FabricaArmas.crear(tipo, nombre, precio, bando, cargadorCapacidad, danoBase, atributoEspecial);
-        tienda.agregarArma(arma);
+        Arma arma = tiendaService.agregarArma(id, tipo, nombre, precio, bando, cargadorCapacidad, danoBase,
+                atributoEspecial);
+        Tienda tienda = tiendaService.buscar(id);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("tienda", tienda.getNombre());
@@ -102,7 +102,7 @@ public class TiendaController {
     })
     @GetMapping("/{id}/catalogo")
     public Map<String, Object> verCatalogo(@PathVariable String id) {
-        Tienda tienda = buscarTienda(id);
+        Tienda tienda = tiendaService.buscar(id);
         List<ArmaResponse> armas = tienda.getArmasDisponibles().stream().map(ArmaResponse::de).toList();
 
         Map<String, Object> response = new LinkedHashMap<>();
@@ -132,8 +132,8 @@ public class TiendaController {
             @PathVariable String id,
             @RequestParam int indiceArma) {
 
-        Tienda tienda = buscarTienda(id);
-        ResultadoCompra resultado = tienda.comprarArma(indiceArma);
+        ResultadoCompra resultado = tiendaService.comprar(id, indiceArma);
+        Tienda tienda = tiendaService.buscar(id);
 
         Map<String, Object> response = new LinkedHashMap<>();
         response.put("tienda", tienda.getNombre());
@@ -148,13 +148,5 @@ public class TiendaController {
             case SALDO_INSUFICIENTE -> HttpStatus.CONFLICT;
         };
         return ResponseEntity.status(status).body(response);
-    }
-
-    private Tienda buscarTienda(String id) {
-        Tienda tienda = tiendas.get(id);
-        if (tienda == null) {
-            throw new TiendaNoEncontradaException(id);
-        }
-        return tienda;
     }
 }

@@ -2,8 +2,6 @@ package py.edu.uc.lp3.ag.cs2.domain;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.CampoObligatorioException;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.SaldoInvalidoException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -19,25 +17,13 @@ class TiendaTest {
     }
 
     @Test
-    @DisplayName("Compra exitosa descuenta saldo y quita el arma")
-    void compraExitosa() {
+    @DisplayName("registrarCompra descuenta el saldo y quita el arma")
+    void registrarCompra() {
         Tienda tienda = tiendaConDosArmas();
-        assertEquals(ResultadoCompra.EXITOSA, tienda.comprarArma(0));
+        tienda.registrarCompra(0);
         assertEquals(300, tienda.getSaldo());
         assertEquals(1, tienda.getCantidadArmas());
-    }
-
-    @Test
-    @DisplayName("Saldo insuficiente e índice inválido no cambian el estado")
-    void compraFallida() {
-        Tienda tienda = tiendaConDosArmas();
-        tienda.comprarArma(0);
-
-        assertEquals(ResultadoCompra.SALDO_INSUFICIENTE, tienda.comprarArma(0));
-        assertEquals(ResultadoCompra.INDICE_INVALIDO, tienda.comprarArma(99));
-        assertEquals(ResultadoCompra.INDICE_INVALIDO, tienda.comprarArma(-1));
-        assertEquals(300, tienda.getSaldo());
-        assertEquals(1, tienda.getCantidadArmas());
+        assertEquals("Deagle", tienda.getArmasDisponibles().get(0).getNombre());
     }
 
     @Test
@@ -55,14 +41,6 @@ class TiendaTest {
         tienda.agregarArma(new Pistola("Glock-18", 200, "T"));
         assertEquals(Tienda.SALDO_INICIAL_CS2, tienda.getSaldo());
         assertEquals(1, tienda.getCantidadArmas());
-    }
-
-    @Test
-    @DisplayName("Invariantes de la tienda")
-    void invariantes() {
-        assertThrows(SaldoInvalidoException.class, () -> new Tienda("CT", -1));
-        assertThrows(CampoObligatorioException.class, () -> new Tienda(" ", 100));
-        assertThrows(CampoObligatorioException.class, () -> new Tienda().agregarArma(null));
     }
 
     @Test

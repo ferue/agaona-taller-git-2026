@@ -3,13 +3,12 @@ package py.edu.uc.lp3.ag.cs2.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.CargadorInvalidoException;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.DanoInvalidoException;
 
 /**
  * Arma que dispara munición desde un cargador.
  *
- * Invariantes: cargadorCapacidad > 0, danoBase > 0 y
+ * Guarda cargador, daño y munición. Las invariantes (cargadorCapacidad > 0 y
+ * danoBase > 0) las controla ArmaService. disparar() y recargar() mantienen
  * 0 <= municionRestante <= cargadorCapacidad.
  */
 @Entity
@@ -32,12 +31,6 @@ public abstract class ArmaDeFuego extends Arma {
 
     protected ArmaDeFuego(String nombre, int precio, String bando, int cargadorCapacidad, int danoBase) {
         super(nombre, precio, bando);
-        if (cargadorCapacidad <= 0) {
-            throw new CargadorInvalidoException(cargadorCapacidad);
-        }
-        if (danoBase <= 0) {
-            throw new DanoInvalidoException("El daño base debe ser mayor a 0", danoBase);
-        }
         this.cargadorCapacidad = cargadorCapacidad;
         this.danoBase = danoBase;
         this.municionRestante = cargadorCapacidad;

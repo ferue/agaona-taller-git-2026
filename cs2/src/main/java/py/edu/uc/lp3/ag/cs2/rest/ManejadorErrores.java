@@ -53,7 +53,7 @@ import py.edu.uc.lp3.ag.cs2.rest.response.ErrorResponse;
 @RestControllerAdvice
 public class ManejadorErrores {
 
-    // ===== Datos que rompen una invariante del dominio → 400 =====
+    // ===== Datos que rompen una invariante (los validan los services) → 400 =====
 
     @ExceptionHandler(CampoObligatorioException.class)
     public ResponseEntity<ErrorResponse> campoObligatorio(CampoObligatorioException e) {

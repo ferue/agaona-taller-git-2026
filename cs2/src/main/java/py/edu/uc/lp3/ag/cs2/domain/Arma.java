@@ -9,18 +9,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
-import py.edu.uc.lp3.ag.cs2.exception.negocio.CambioDeTipoException;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.CampoObligatorioException;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.PrecioNegativoException;
 
 /**
  * Raíz de la jerarquía de armas de CS2 y entidad JPA raíz.
  *
- * Invariantes que garantiza la clase:
- * - nombre y bando nunca son nulos ni vacíos.
- * - precio nunca es negativo.
- * - skin nunca es nula ni vacía (por defecto "Vanilla").
- * Si se rompe una invariante se lanza una DatoInvalidoException (jerarquía en exception/).
+ * El dominio solo guarda el estado encapsulado: no valida ni lanza
+ * excepciones. Las invariantes (nombre, bando y skin obligatorios, precio
+ * no negativo) las controla ArmaService antes de usar o guardar el arma.
  *
  * Posición: opcional. Si es null el arma está en el catálogo; si tiene una,
  * el arma está tirada en el mapa y una explosión la puede empujar.
@@ -28,9 +23,9 @@ import py.edu.uc.lp3.ag.cs2.exception.validacion.PrecioNegativoException;
  * Persistencia: herencia JPA con estrategia JOINED. La tabla "armas" guarda
  * los datos comunes y cada subclase tiene su propia tabla unida por el id.
  *
- * Los atributos ya no son final porque JPA los completa al leer de la base,
- * pero siguen sin setters: el estado solo cambia por los constructores,
- * aplicarSkin(...), ubicarEn(...) y actualizarCon(...), que respetan las invariantes.
+ * Los atributos no son final porque JPA los completa al leer de la base,
+ * pero no hay setters: el estado solo cambia por los constructores,
+ * aplicarSkin(...), ubicarEn(...) y actualizarCon(...).
  */
 @Entity
 @Table(name = "armas")
@@ -68,15 +63,12 @@ public abstract class Arma implements UICapable {
         this(nombre, precio, bando, SKIN_POR_DEFECTO);
     }
 
-    // 3. Constructor sobrecargado completo: único lugar donde se validan las invariantes
+    // 3. Constructor sobrecargado completo: inicializa todo el estado común
     protected Arma(String nombre, int precio, String bando, String skin) {
-        this.nombre = requerirTexto(nombre, "nombre");
-        if (precio < 0) {
-            throw new PrecioNegativoException(precio);
-        }
+        this.nombre = limpiar(nombre);
         this.precio = precio;
-        this.bando = requerirTexto(bando, "bando");
-        this.skin = requerirTexto(skin, "skin");
+        this.bando = limpiar(bando);
+        this.skin = limpiar(skin);
     }
 
     // Sobrecarga de métodos: aplicar una skin simple o con contador StatTrak™
@@ -85,8 +77,9 @@ public abstract class Arma implements UICapable {
     }
 
     public void aplicarSkin(String nombreSkin, boolean esStatTrak) {
-        String base = requerirTexto(nombreSkin, "skin");
-        this.skin = esStatTrak ? "StatTrak™ " + base : base;
+        String base = limpiar(nombreSkin);
+        boolean conNombre = base != null && !base.isEmpty();
+        this.skin = esStatTrak && conNombre ? "StatTrak™ " + base : base;
     }
 
     public boolean tieneSkinPersonalizada() {
@@ -109,17 +102,10 @@ public abstract class Arma implements UICapable {
 
     /**
      * Copia los datos de otra arma del mismo tipo (se usa en el PUT del CRUD).
-     * "datos" ya pasó por un constructor, así que sus valores cumplen las
-     * invariantes. Las subclases lo sobrescriben, llaman a super y copian sus
-     * propios atributos.
+     * ArmaService ya comprobó que "datos" es válido y del mismo tipo. Las
+     * subclases lo sobrescriben, llaman a super y copian sus propios atributos.
      */
     public void actualizarCon(Arma datos) {
-        if (datos == null) {
-            throw new CampoObligatorioException("datos del arma");
-        }
-        if (getClass() != datos.getClass()) {
-            throw new CambioDeTipoException(getClass().getSimpleName(), datos.getClass().getSimpleName());
-        }
         this.nombre = datos.nombre;
         this.precio = datos.precio;
         this.bando = datos.bando;
@@ -140,7 +126,7 @@ public abstract class Arma implements UICapable {
         return tieneSkinPersonalizada() ? nombre + " | " + skin : nombre;
     }
 
-    // Solo getters: el estado no se puede modificar desde afuera sin pasar por las reglas.
+    // Solo getters: el estado no se puede modificar desde afuera.
     public Long getId() { return id; }
     public String getNombre() { return nombre; }
     public int getPrecio() { return precio; }
@@ -152,10 +138,8 @@ public abstract class Arma implements UICapable {
     public abstract String ejecutarAccionPrincipal();
     public abstract String obtenerDetalles();
 
-    protected static String requerirTexto(String valor, String campo) {
-        if (valor == null || valor.isBlank()) {
-            throw new CampoObligatorioException(campo);
-        }
-        return valor.trim();
+    /** Quita los espacios de los extremos; no valida (eso lo hace el service). */
+    private static String limpiar(String texto) {
+        return texto == null ? null : texto.trim();
     }
 }

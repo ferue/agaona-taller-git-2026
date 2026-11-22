@@ -1,8 +1,5 @@
 package py.edu.uc.lp3.ag.cs2.domain;
 
-import py.edu.uc.lp3.ag.cs2.exception.validacion.CampoObligatorioException;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.SaldoInvalidoException;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -10,8 +7,10 @@ import java.util.List;
 /**
  * Tienda (buy menu) con un saldo y un catálogo de armas.
  *
- * Invariantes: el nombre no es vacío, el saldo nunca es negativo y el
- * catálogo solo cambia mediante agregarArma(...) y comprarArma(...).
+ * Guarda el nombre, el saldo y el catálogo. Las validaciones (nombre
+ * obligatorio, saldo no negativo) y la regla de compra (el arma existe y el
+ * saldo alcanza) están en TiendaService. El catálogo solo cambia con
+ * agregarArma(...) y registrarCompra(...).
  */
 public class Tienda {
     public static final int SALDO_INICIAL_CS2 = 800;
@@ -26,34 +25,21 @@ public class Tienda {
     }
 
     public Tienda(String nombre, int saldoInicial) {
-        if (nombre == null || nombre.isBlank()) {
-            throw new CampoObligatorioException("nombre");
-        }
-        if (saldoInicial < 0) {
-            throw new SaldoInvalidoException(saldoInicial);
-        }
-        this.nombre = nombre.trim();
+        this.nombre = nombre == null ? null : nombre.trim();
         this.saldo = saldoInicial;
     }
 
     public void agregarArma(Arma arma) {
-        if (arma == null) {
-            throw new CampoObligatorioException("arma");
-        }
         armasDisponibles.add(arma);
     }
 
-    public ResultadoCompra comprarArma(int indice) {
-        if (indice < 0 || indice >= armasDisponibles.size()) {
-            return ResultadoCompra.INDICE_INVALIDO;
-        }
-        Arma arma = armasDisponibles.get(indice);
-        if (saldo < arma.getPrecio()) {
-            return ResultadoCompra.SALDO_INSUFICIENTE;
-        }
+    /**
+     * Cobra el arma de esa posición y la saca del catálogo. TiendaService ya
+     * comprobó que la posición existe y que el saldo alcanza.
+     */
+    public void registrarCompra(int indice) {
+        Arma arma = armasDisponibles.remove(indice);
         saldo -= arma.getPrecio();
-        armasDisponibles.remove(indice);
-        return ResultadoCompra.EXITOSA;
     }
 
     public String mostrarCatalogo() {

@@ -2,19 +2,12 @@ package py.edu.uc.lp3.ag.cs2.domain;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.CampoObligatorioException;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.CargadorInvalidoException;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.DanoInvalidoException;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.DuracionHumoInvalidaException;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.PrecioNegativoException;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.TiempoRetardoInvalidoException;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ArmaTest {
@@ -62,19 +55,14 @@ class ArmaTest {
     }
 
     @Test
-    @DisplayName("Las invariantes rechazan datos inválidos")
-    void invariantes() {
-        assertThrows(PrecioNegativoException.class, () -> new Rifle("AK-47", -1, "T"));
-        assertThrows(CampoObligatorioException.class, () -> new Rifle(null, 100, "T"));
-        assertThrows(CampoObligatorioException.class, () -> new Rifle("  ", 100, "T"));
-        assertThrows(CampoObligatorioException.class, () -> new Rifle("AK-47", 100, null));
-        assertThrows(CargadorInvalidoException.class, () -> new Rifle("AK-47", 100, "T", 0, 36, false));
-        assertThrows(DanoInvalidoException.class, () -> new Pistola("P2000", 200, "CT", 13, -5, false));
-        assertThrows(TiempoRetardoInvalidoException.class, () -> new GranadaHumo("Smoke", 300, "CT", -1f, 18f));
-        assertThrows(DuracionHumoInvalidaException.class, () -> new GranadaHumo("Smoke", 300, "CT", 1.5f, 0f));
-        Rifle rifle = new Rifle("AK-47", 2700, "T");
-        assertThrows(CampoObligatorioException.class, () -> rifle.aplicarSkin(""));
-        assertEquals(Arma.SKIN_POR_DEFECTO, rifle.getSkin());
+    @DisplayName("El dominio no valida: guarda lo que recibe y deja la validación al service")
+    void elDominioNoValida() {
+        Rifle roto = new Rifle("  AK-47 ", -1, "T", 0, -5, false);
+        assertEquals("AK-47", roto.getNombre());   // solo quita espacios
+        assertEquals(-1, roto.getPrecio());
+        assertEquals(0, roto.getCargadorCapacidad());
+        roto.aplicarSkin("");
+        assertEquals("", roto.getSkin());           // ArmaService.validar lo rechaza
     }
 
     @Test

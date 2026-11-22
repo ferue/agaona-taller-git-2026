@@ -15,6 +15,8 @@ import py.edu.uc.lp3.ag.cs2.domain.Rifle;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.ArmaNoExplosivaException;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.GranadaYaDetonadaException;
 import py.edu.uc.lp3.ag.cs2.exception.noencontrado.ArmaNoEncontradaException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.CampoObligatorioException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.CoordenadaInvalidaException;
 
 import java.util.List;
 
@@ -106,5 +108,9 @@ class ExplosionServiceTest {
     void errores() {
         assertThrows(ArmaNoExplosivaException.class, () -> explosionService.explotar(galil.getId(), CENTRO));
         assertThrows(ArmaNoEncontradaException.class, () -> explosionService.explotar(9999L, CENTRO));
+        assertThrows(CampoObligatorioException.class, () -> explosionService.explotar(null, CENTRO));
+        assertThrows(CoordenadaInvalidaException.class,
+                () -> explosionService.explotar(he.getId(), new Posicion(0, Double.NaN, 0)));
+        assertFalse(he.isDetonada());   // los errores no gastan la granada
     }
 }

@@ -44,6 +44,6 @@ public class ExplosionController {
     @PostMapping
     public ExplosionResponse explotar(@RequestBody ExplosionRequest request) {
         return ExplosionResponse.de(
-                explosionService.explotar(request.granadaIdObligatorio(), request.centro()));
+                explosionService.explotar(request.granadaId(), request.centro()));
     }
 }

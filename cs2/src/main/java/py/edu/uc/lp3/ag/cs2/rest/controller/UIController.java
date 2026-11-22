@@ -10,34 +10,19 @@ import py.edu.uc.lp3.ag.cs2.rest.response.ErrorResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
-import py.edu.uc.lp3.ag.cs2.domain.GranadaHumo;
-import py.edu.uc.lp3.ag.cs2.domain.Pistola;
-import py.edu.uc.lp3.ag.cs2.domain.Rifle;
 import py.edu.uc.lp3.ag.cs2.domain.UICapable;
-import py.edu.uc.lp3.ag.cs2.exception.noencontrado.ElementoUINoEncontradoException;
 import py.edu.uc.lp3.ag.cs2.rest.response.UIElementResponse;
+import py.edu.uc.lp3.ag.cs2.service.UIService;
 
-import java.util.Locale;
-import java.util.Map;
 
 @Tag(name = "HUD - /ui de POO-07", description = "Elementos de HUD de ejemplo, a través de la interfaz UICapable.")
 @RestController
 public class UIController {
 
-    private final Map<String, UICapable> catalogo;
+    private final UIService uiService;
 
-    public UIController() {
-        Rifle ak = new Rifle("AK-47", 2700, "T", 30, 36, false);
-        Pistola usp = new Pistola("USP-S", 200, "CT", 12, 35, true);
-        GranadaHumo humo = new GranadaHumo("Smoke", 300, "CT/T");
-
-        catalogo = Map.of(
-                "ak47", ak,
-                "rifle", ak,
-                "pistola", usp,
-                "usp", usp,
-                "smoke", humo,
-                "humo", humo);
+    public UIController(UIService uiService) {
+        this.uiService = uiService;
     }
 
     @Operation(summary = "Consultar un elemento del HUD",
@@ -49,10 +34,7 @@ public class UIController {
     })
     @GetMapping("/ui/{nombre}")
     public UIElementResponse consultarUI(@PathVariable String nombre) {
-        UICapable elemento = catalogo.get(nombre.toLowerCase(Locale.ROOT));
-        if (elemento == null) {
-            throw new ElementoUINoEncontradoException(nombre, catalogo.keySet());
-        }
+        UICapable elemento = uiService.buscar(nombre);
 
         // POLIMORFISMO: el controlador solo conoce el contrato UICapable,
         // no la clase concreta; cada arma responde con su propio icono y sonido.

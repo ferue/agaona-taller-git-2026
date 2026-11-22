@@ -11,6 +11,10 @@ import py.edu.uc.lp3.ag.cs2.exception.validacion.CantidadDisparosInvalidaExcepti
 import py.edu.uc.lp3.ag.cs2.exception.validacion.PrecioNegativoException;
 import py.edu.uc.lp3.ag.cs2.exception.validacion.TipoArmaNoSoportadoException;
 import py.edu.uc.lp3.ag.cs2.rest.response.ArmaResponse;
+import py.edu.uc.lp3.ag.cs2.service.ArmaService;
+import py.edu.uc.lp3.ag.cs2.service.DemostracionArmasService;
+import py.edu.uc.lp3.ag.cs2.service.TiendaService;
+import py.edu.uc.lp3.ag.cs2.service.UIService;
 
 import java.util.List;
 import java.util.Map;
@@ -19,15 +23,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Pruebas de los controladores llamando directamente a sus métodos.
+ * Pruebas de los controladores llamando directamente a sus métodos. Cada
+ * controller delega en su service (DemostracionArmasService, TiendaService, UIService).
  * Los códigos 400/404 que generan las excepciones los aplica ManejadorErrores.
  */
 class ControladoresTest {
 
+    // Los services de estos controllers no usan la base: se arman a mano.
+    private final ArmaService armaService = new ArmaService(null);
+
+    private ArmaController armaController() {
+        return new ArmaController(new DemostracionArmasService(armaService));
+    }
+
     @Test
     @DisplayName("/api/armas/probar conserva el bando y aplica skin StatTrak")
     void probarArma() {
-        Map<String, Object> r = new ArmaController().probarArma("AK-47", 2700, "rifle", "T", "Asiimov", true);
+        Map<String, Object> r = armaController().probarArma("AK-47", 2700, "rifle", "T", "Asiimov", true);
         ArmaResponse arma = (ArmaResponse) r.get("arma");
         assertEquals("Rifle", arma.tipo());
         assertEquals("T", arma.bando());
@@ -37,7 +49,7 @@ class ControladoresTest {
     @Test
     @DisplayName("/api/armas/probar rechaza precio negativo y tipo desconocido")
     void probarArmaInvalida() {
-        ArmaController c = new ArmaController();
+        ArmaController c = armaController();
         assertThrows(PrecioNegativoException.class, () -> c.probarArma("X", -100, "rifle", "T", null, null));
         assertThrows(TipoArmaNoSoportadoException.class, () -> c.probarArma("Nova", 1050, "escopeta", "CT", null, null));
     }
@@ -45,18 +57,18 @@ class ControladoresTest {
     @Test
     @DisplayName("/api/armas/rafaga muestra la munición bajando y la recarga")
     void rafaga() {
-        Map<String, Object> r = new ArmaController().rafaga("pistola", 3);
+        Map<String, Object> r = armaController().rafaga("pistola", 3);
         assertEquals(3, ((List<?>) r.get("disparos")).size());
         assertEquals(9, r.get("municionAntesDeRecargar"));
         assertEquals(12, r.get("municionFinal"));
-        assertThrows(ArmaNoDisparaException.class, () -> new ArmaController().rafaga("humo", 3));
-        assertThrows(CantidadDisparosInvalidaException.class, () -> new ArmaController().rafaga("rifle", 0));
+        assertThrows(ArmaNoDisparaException.class, () -> armaController().rafaga("humo", 3));
+        assertThrows(CantidadDisparosInvalidaException.class, () -> armaController().rafaga("rifle", 0));
     }
 
     @Test
     @DisplayName("Flujo de tienda: crear, agregar, comprar y errores")
     void flujoTienda() {
-        TiendaController c = new TiendaController();
+        TiendaController c = new TiendaController(new TiendaService(armaService));
         String id = (String) c.crearTienda("CT", 3000).get("id");
 
         c.agregarArma(id, "rifle", "M4A1-S", 2900, "CT", 25, 38, true);
@@ -83,7 +95,7 @@ class ControladoresTest {
     @Test
     @DisplayName("/ui/{nombre} responde por polimorfismo y 404 si no existe")
     void ui() {
-        UIController c = new UIController();
+        UIController c = new UIController(new UIService());
         assertEquals("Rifle", c.consultarUI("AK47").tipo());
         assertEquals("ui/hud/icons/smoke_grenade.png", c.consultarUI("smoke").imagen());
         assertThrows(ElementoUINoEncontradoException.class, () -> c.consultarUI("awp"));

@@ -7,18 +7,16 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.CampoObligatorioException;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.DanoInvalidoException;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.VidaInvalidaException;
 
 import java.util.Locale;
 
 /**
  * Jugador en el mapa. Participa en la simulación de explosiones.
  *
- * Invariantes: nombre y bando obligatorios, 0 <= vida <= 100 y siempre
- * tiene una posición. La vida solo baja con recibirDano(...), que nunca la
- * deja por debajo de 0.
+ * Guarda nombre, bando, vida, chaleco y posición. Las invariantes (nombre y
+ * bando obligatorios, 0 <= vida <= 100, posición obligatoria) las controla
+ * JugadorService, y cuánto daño recibe en una explosión (chaleco incluido) lo
+ * calcula ExplosionService. La vida solo cambia con perderVida(...).
  *
  * Implementa UICapable, igual que Arma: dos familias distintas con el mismo
  * protocolo de HUD (lo usa GET /api/hud).
@@ -27,8 +25,6 @@ import java.util.Locale;
 @Table(name = "jugadores")
 public class Jugador implements UICapable {
     public static final int VIDA_MAXIMA = 100;
-    /** El chaleco (kevlar) deja pasar la mitad del daño de una explosión. */
-    public static final double FACTOR_CHALECO = 0.5;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -59,31 +55,16 @@ public class Jugador implements UICapable {
     }
 
     public Jugador(String nombre, String bando, int vida, boolean tieneChaleco, Posicion posicion) {
-        this.nombre = requerirTexto(nombre, "nombre");
-        this.bando = requerirTexto(bando, "bando");
-        if (vida < 0 || vida > VIDA_MAXIMA) {
-            throw new VidaInvalidaException(vida, VIDA_MAXIMA);
-        }
-        if (posicion == null) {
-            throw new CampoObligatorioException("posicion");
-        }
+        this.nombre = limpiar(nombre);
+        this.bando = limpiar(bando);
         this.vida = vida;
         this.tieneChaleco = tieneChaleco;
         this.posicion = posicion;
     }
 
-    /**
-     * Aplica el daño de una explosión: el chaleco lo reduce a la mitad y la
-     * vida no baja de 0. Devuelve el daño que realmente se descontó.
-     */
-    public int recibirDano(int dano) {
-        if (dano < 0) {
-            throw new DanoInvalidoException("El daño recibido no puede ser negativo", dano);
-        }
-        int danoReal = tieneChaleco ? (int) Math.round(dano * FACTOR_CHALECO) : dano;
-        danoReal = Math.min(danoReal, vida);
-        vida -= danoReal;
-        return danoReal;
+    /** Descuenta vida. ExplosionService ya calculó cuánto (nunca más de la vida que queda). */
+    public void perderVida(int puntos) {
+        this.vida -= puntos;
     }
 
     public boolean estaVivo() {
@@ -119,10 +100,8 @@ public class Jugador implements UICapable {
     public boolean isTieneChaleco() { return tieneChaleco; }
     public Posicion getPosicion() { return posicion; }
 
-    private static String requerirTexto(String valor, String campo) {
-        if (valor == null || valor.isBlank()) {
-            throw new CampoObligatorioException(campo);
-        }
-        return valor.trim();
+    /** Quita los espacios de los extremos; no valida (eso lo hace JugadorService). */
+    private static String limpiar(String texto) {
+        return texto == null ? null : texto.trim();
     }
 }

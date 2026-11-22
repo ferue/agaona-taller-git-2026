@@ -3,10 +3,10 @@ package py.edu.uc.lp3.ag.cs2.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import py.edu.uc.lp3.ag.cs2.exception.validacion.DuracionHumoInvalidaException;
 
 /**
- * Granada de humo. Invariante: duracionHumo > 0 segundos.
+ * Granada de humo con la duración del humo en segundos
+ * (ArmaService controla que sea mayor a 0).
  */
 @Entity
 @Table(name = "granadas_humo")
@@ -29,9 +29,6 @@ public class GranadaHumo extends Granada {
 
     public GranadaHumo(String nombre, int precio, String bando, float tiempoRetardo, float duracionHumo) {
         super(nombre, precio, bando, tiempoRetardo);
-        if (duracionHumo <= 0) {
-            throw new DuracionHumoInvalidaException(duracionHumo);
-        }
         this.duracionHumo = duracionHumo;
     }
 

@@ -40,7 +40,10 @@ public record ArmaRequest(
         @Schema(description = "Opcional, junto con x e y") Double z
 ) {
 
-    /** Convierte el JSON en un objeto del dominio; los constructores validan las invariantes. */
+    /**
+     * Convierte el JSON en un objeto del dominio. Solo controla que llegue el
+     * precio (sin él no se puede construir); las invariantes las valida ArmaService.
+     */
     public Arma aDominio() {
         if (precio == null) {
             throw new CampoObligatorioException("precio");

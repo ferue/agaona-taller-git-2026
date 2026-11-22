@@ -10,9 +10,13 @@ import py.edu.uc.lp3.ag.cs2.domain.Posicion;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.BandoInvalidoException;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.JugadorDuplicadoException;
 import py.edu.uc.lp3.ag.cs2.exception.noencontrado.JugadorNoEncontradoException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.CampoObligatorioException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.CoordenadaInvalidaException;
+import py.edu.uc.lp3.ag.cs2.exception.validacion.VidaInvalidaException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @Transactional
@@ -38,5 +42,19 @@ class JugadorServiceTest {
         assertThrows(JugadorDuplicadoException.class, () -> jugadorService.crear(new Jugador("lobo", "CT", p)));
         assertThrows(BandoInvalidoException.class, () -> jugadorService.crear(new Jugador("Otro", "CT/T", p)));
         assertThrows(JugadorNoEncontradoException.class, () -> jugadorService.obtener(999L));
+    }
+
+    @Test
+    @DisplayName("Invariantes del jugador: las valida el service")
+    void invariantes() {
+        Posicion p = new Posicion(0, 0, 0);
+        assertThrows(VidaInvalidaException.class, () -> jugadorService.crear(new Jugador("D", "T", 150, false, p)));
+        assertThrows(VidaInvalidaException.class, () -> jugadorService.crear(new Jugador("D", "T", -1, false, p)));
+        assertThrows(CampoObligatorioException.class, () -> jugadorService.crear(new Jugador(" ", "T", p)));
+        assertThrows(CampoObligatorioException.class, () -> jugadorService.crear(new Jugador("D", null, p)));
+        assertThrows(CampoObligatorioException.class, () -> jugadorService.crear(new Jugador("D", "T", null)));
+        assertThrows(CoordenadaInvalidaException.class,
+                () -> jugadorService.crear(new Jugador("D", "T", new Posicion(Double.NaN, 0, 0))));
+        assertTrue(jugadorService.listar().isEmpty());
     }
 }
