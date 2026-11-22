@@ -1,5 +1,11 @@
 package py.edu.uc.lp3.ag.cs2.rest.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -7,9 +13,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@Tag(name = "Inicio", description = "Estado del servicio y lista de endpoints.")
 @RestController
 public class IndexController {
 
+    @Operation(summary = "Servicio vivo",
+            description = "Devuelve estado OK y la lista de endpoints.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Servicio en línea")
+    })
     @GetMapping("/")
     public Map<String, Object> index() {
         Map<String, Object> response = new LinkedHashMap<>();
@@ -29,6 +41,8 @@ public class IndexController {
                 "POST   /api/jugadores        (crear jugador, cuerpo JSON)",
                 "POST   /api/explosiones      (explota una granada HE: {granadaId, x, y, z})",
                 "GET    /api/hud              (protocolo UICapable: armas y jugadores de la base)",
+                "GET    /api/objetos-externos      (consulta https://api.restful-api.dev con WebClient, opcional ?nombre=)",
+                "GET    /api/objetos-externos/{id} (un objeto de restful-api.dev)",
                 "POST /tienda?nombre=CT&saldo=5000",
                 "POST /tienda/{id}/agregar-arma?tipo=rifle&nombre=M4A1-S&precio=2900&bando=CT",
                 "GET  /tienda/{id}/catalogo",

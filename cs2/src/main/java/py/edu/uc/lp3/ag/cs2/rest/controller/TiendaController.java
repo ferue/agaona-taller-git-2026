@@ -1,5 +1,12 @@
 package py.edu.uc.lp3.ag.cs2.rest.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import py.edu.uc.lp3.ag.cs2.rest.response.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +29,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Tag(name = "Tienda (POO-06, en memoria)", description = "Tienda de compra de CS2 que vive en memoria (no se guarda en H2).")
 @RestController
 @RequestMapping("/tienda")
 public class TiendaController {
@@ -29,6 +37,13 @@ public class TiendaController {
     private final Map<String, Tienda> tiendas = new ConcurrentHashMap<>();
     private final AtomicInteger contador = new AtomicInteger();
 
+    @Operation(summary = "Crear una tienda",
+            description = "Crea una tienda con nombre y saldo inicial.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Tienda creada"),
+        @ApiResponse(responseCode = "400", description = "SaldoInvalidoException, CampoObligatorioException o ParametroFaltante",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> crearTienda(
@@ -46,6 +61,15 @@ public class TiendaController {
         return response;
     }
 
+    @Operation(summary = "Agregar un arma a la tienda",
+            description = "Agrega un arma al catálogo de la tienda.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "201", description = "Arma agregada"),
+        @ApiResponse(responseCode = "400", description = "Datos del arma inválidos o TipoArmaNoSoportadoException",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "404", description = "TiendaNoEncontradaException",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PostMapping("/{id}/agregar-arma")
     @ResponseStatus(HttpStatus.CREATED)
     public Map<String, Object> agregarArma(
@@ -69,6 +93,13 @@ public class TiendaController {
         return response;
     }
 
+    @Operation(summary = "Ver el catálogo",
+            description = "Lista las armas de la tienda y su saldo.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Catálogo"),
+        @ApiResponse(responseCode = "404", description = "TiendaNoEncontradaException",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @GetMapping("/{id}/catalogo")
     public Map<String, Object> verCatalogo(@PathVariable String id) {
         Tienda tienda = buscarTienda(id);
@@ -87,6 +118,15 @@ public class TiendaController {
      * 200 si la compra se hizo, 400 si el índice no existe y
      * 409 (Conflict) si el saldo no alcanza.
      */
+    @Operation(summary = "Comprar un arma",
+            description = "Compra el arma de esa posición del catálogo.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Compra realizada"),
+        @ApiResponse(responseCode = "400", description = "Índice inválido (ResultadoCompra.INDICE_INVALIDO)"),
+        @ApiResponse(responseCode = "404", description = "TiendaNoEncontradaException",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "409", description = "Saldo insuficiente (ResultadoCompra.SALDO_INSUFICIENTE)")
+    })
     @PostMapping("/{id}/comprar")
     public ResponseEntity<Map<String, Object>> comprarArma(
             @PathVariable String id,

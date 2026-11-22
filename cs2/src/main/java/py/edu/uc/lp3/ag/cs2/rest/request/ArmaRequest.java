@@ -1,5 +1,6 @@
 package py.edu.uc.lp3.ag.cs2.rest.request;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import py.edu.uc.lp3.ag.cs2.domain.Arma;
 import py.edu.uc.lp3.ag.cs2.domain.ArmaDeFuego;
 import py.edu.uc.lp3.ag.cs2.domain.GranadaHE;
@@ -20,23 +21,23 @@ import py.edu.uc.lp3.ag.cs2.service.FabricaArmas;
  * - x / y / z: si llegan, el arma queda tirada en ese punto del mapa (van las tres juntas).
  */
 public record ArmaRequest(
-        String tipo,
-        String nombre,
-        Integer precio,
-        String bando,
-        String skin,
-        Boolean statTrak,
-        Integer cargadorCapacidad,
-        Integer danoBase,
-        Boolean atributoEspecial,
-        Float tiempoRetardo,
-        Float duracionHumo,
-        Float radioExplosion,
-        Integer danoMaximo,
-        Float empujeMaximo,
-        Double x,
-        Double y,
-        Double z
+        @Schema(description = "rifle, pistola, granada-humo o granada-he", example = "rifle") String tipo,
+        @Schema(description = "Nombre único en el catálogo", example = "AWP") String nombre,
+        @Schema(description = "Precio entre 0 y 16000", example = "4750") Integer precio,
+        @Schema(description = "T, CT o CT/T", example = "CT/T") String bando,
+        @Schema(description = "Opcional. Las granadas no admiten skins", example = "Dragon Lore") String skin,
+        @Schema(description = "Opcional. Antepone StatTrak™ a la skin", example = "false") Boolean statTrak,
+        @Schema(description = "Opcional, armas de fuego. Mayor a 0", example = "5") Integer cargadorCapacidad,
+        @Schema(description = "Opcional, armas de fuego. Mayor a 0", example = "115") Integer danoBase,
+        @Schema(description = "Opcional: mira (rifle) o silenciador (pistola)", example = "true") Boolean atributoEspecial,
+        @Schema(description = "Opcional, granadas. Segundos, 0 o más") Float tiempoRetardo,
+        @Schema(description = "Opcional, granada de humo. Segundos, mayor a 0") Float duracionHumo,
+        @Schema(description = "Opcional, granada HE. Metros, mayor a 0 (estándar 8)") Float radioExplosion,
+        @Schema(description = "Opcional, granada HE. Mayor a 0 (estándar 98)") Integer danoMaximo,
+        @Schema(description = "Opcional, granada HE. Metros, 0 o más (estándar 6)") Float empujeMaximo,
+        @Schema(description = "Opcional: si llegan x, y, z el arma queda tirada en el mapa") Double x,
+        @Schema(description = "Opcional, junto con x y z") Double y,
+        @Schema(description = "Opcional, junto con x e y") Double z
 ) {
 
     /** Convierte el JSON en un objeto del dominio; los constructores validan las invariantes. */

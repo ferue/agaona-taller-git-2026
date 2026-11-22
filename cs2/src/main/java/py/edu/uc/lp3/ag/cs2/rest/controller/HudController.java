@@ -1,5 +1,11 @@
 package py.edu.uc.lp3.ag.cs2.rest.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import py.edu.uc.lp3.ag.cs2.domain.UICapable;
@@ -14,6 +20,7 @@ import java.util.List;
  * los mismos mensajes (obtenerIconoHud, etiquetaHud, emitirSonidoInspeccion).
  * Cada clase responde a su manera: polimorfismo a través de la interfaz.
  */
+@Tag(name = "HUD - interfaz UICapable", description = "Protocolo de dominio UICapable, implementado por Arma y por Jugador.")
 @RestController
 public class HudController {
 
@@ -23,6 +30,11 @@ public class HudController {
         this.hudService = hudService;
     }
 
+    @Operation(summary = "Ver el HUD",
+            description = "Lista armas y jugadores de H2 tratados como UICapable: icono, etiqueta y sonido de cada uno.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "Elementos del HUD")
+    })
     @GetMapping("/api/hud")
     public List<HudElementoResponse> hud() {
         List<UICapable> elementos = hudService.elementos();
