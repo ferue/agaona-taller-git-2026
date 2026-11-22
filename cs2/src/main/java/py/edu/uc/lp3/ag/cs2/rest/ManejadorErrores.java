@@ -23,6 +23,7 @@ import py.edu.uc.lp3.ag.cs2.exception.validacion.TipoArmaNoSoportadoException;
 import py.edu.uc.lp3.ag.cs2.exception.validacion.VidaInvalidaException;
 import py.edu.uc.lp3.ag.cs2.exception.noencontrado.ArmaNoEncontradaException;
 import py.edu.uc.lp3.ag.cs2.exception.noencontrado.ElementoUINoEncontradoException;
+import py.edu.uc.lp3.ag.cs2.exception.noencontrado.JugadaNoEncontradaException;
 import py.edu.uc.lp3.ag.cs2.exception.noencontrado.JugadorNoEncontradoException;
 import py.edu.uc.lp3.ag.cs2.exception.noencontrado.ObjetoExternoNoEncontradoException;
 import py.edu.uc.lp3.ag.cs2.exception.noencontrado.TiendaNoEncontradaException;
@@ -35,6 +36,10 @@ import py.edu.uc.lp3.ag.cs2.exception.negocio.GranadaYaDetonadaException;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.JugadorDuplicadoException;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.PrecioExcedidoException;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.SkinNoPermitidaException;
+import py.edu.uc.lp3.ag.cs2.exception.externo.A2NoDisponibleException;
+import py.edu.uc.lp3.ag.cs2.exception.externo.A3NoDisponibleException;
+import py.edu.uc.lp3.ag.cs2.exception.externo.RechazoA2Exception;
+import py.edu.uc.lp3.ag.cs2.exception.externo.RechazoA3Exception;
 import py.edu.uc.lp3.ag.cs2.exception.externo.ServicioExternoNoDisponibleException;
 import py.edu.uc.lp3.ag.cs2.rest.response.ErrorResponse;
 
@@ -132,6 +137,11 @@ public class ManejadorErrores {
         return responder(HttpStatus.NOT_FOUND, e);
     }
 
+    @ExceptionHandler(JugadaNoEncontradaException.class)
+    public ResponseEntity<ErrorResponse> jugadaNoEncontrada(JugadaNoEncontradaException e) {
+        return responder(HttpStatus.NOT_FOUND, e);
+    }
+
     @ExceptionHandler(JugadorNoEncontradoException.class)
     public ResponseEntity<ErrorResponse> jugadorNoEncontrado(JugadorNoEncontradoException e) {
         return responder(HttpStatus.NOT_FOUND, e);
@@ -198,6 +208,28 @@ public class ManejadorErrores {
 
     @ExceptionHandler(ServicioExternoNoDisponibleException.class)
     public ResponseEntity<ErrorResponse> servicioExternoNoDisponible(ServicioExternoNoDisponibleException e) {
+        return responder(HttpStatus.BAD_GATEWAY, e);
+    }
+
+    // ===== POO-09: compañeros A2 y A3. Un handler por compañero, así se ve de quién fue =====
+
+    @ExceptionHandler(RechazoA2Exception.class)
+    public ResponseEntity<ErrorResponse> rechazoA2(RechazoA2Exception e) {
+        return responder(HttpStatus.CONFLICT, e);
+    }
+
+    @ExceptionHandler(RechazoA3Exception.class)
+    public ResponseEntity<ErrorResponse> rechazoA3(RechazoA3Exception e) {
+        return responder(HttpStatus.CONFLICT, e);
+    }
+
+    @ExceptionHandler(A2NoDisponibleException.class)
+    public ResponseEntity<ErrorResponse> a2NoDisponible(A2NoDisponibleException e) {
+        return responder(HttpStatus.BAD_GATEWAY, e);
+    }
+
+    @ExceptionHandler(A3NoDisponibleException.class)
+    public ResponseEntity<ErrorResponse> a3NoDisponible(A3NoDisponibleException e) {
         return responder(HttpStatus.BAD_GATEWAY, e);
     }
 
