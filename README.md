@@ -14,6 +14,16 @@ Este commit tiene la solución completa del POO-08: el código, los tests, la co
 
 Las especificaciones aplicadas a este dominio están en [`docs/especificaciones-poo-08.md`](docs/especificaciones-poo-08.md).
 
+### ✅ Situación del POO-08 (observaciones de la corrección cerradas)
+
+La corrección del POO-08 (22,5 / 24) dejó tres observaciones. Las tres quedaron cerradas en la rama `feature/RESTApi`:
+
+| # | Observación | Qué se cambió |
+|---|---|---|
+| 1 | **Organización en paquetes (−1):** el dominio validaba en los constructores, lanzaba excepciones (`DatoInvalidoException`, `GranadaYaDetonadaException`) y tenía las dos reglas (`GranadaHE.danar` y `GranadaHE.empujar`). | El paquete `domain/` ya **no tiene ningún `throw` ni importa `exception/`**: solo guarda el estado encapsulado. Las invariantes de los constructores pasaron a `ArmaService.validar(...)` y `JugadorService.validar(...)`; las dos reglas, sus fórmulas, el chaleco, la geometría y el control de "ya detonada" pasaron a `ExplosionService`. Mismas excepciones y mismos códigos HTTP. |
+| 2 | **Mejora (no restaba):** `ArmaController` validaba la ráfaga y `TiendaController` guardaba las tiendas en un mapa. | Nuevos `DemostracionArmasService`, `TiendaService` (mapa de tiendas y regla de compra) y `UIService` (catálogo de `/ui`). Ahora todos los controllers solo convierten HTTP ↔ objetos y delegan en un service. |
+| 3 | **Documentación (−0,5):** el curl de la Desert Eagle mostraba `id 6`. | Con la base limpia responde **`id 10`** (del 1 al 9 son la carga inicial; el 6 es la HE). Corregido en el [ejemplo del CRUD](#endpoints). |
+
 ### 🔗 Commit de la entrega (Ejercicio POO-06)
 
 https://github.com/ferue/agaona-taller-git-2026/commit/4fae9d253e3a9f7961eee31320f8a42ea60ff53a
@@ -33,18 +43,18 @@ El proyecto modela armas y la tienda (buy menu) del videojuego **Counter-Strike 
 1. **Daño de la explosión:** una granada HE daña a todos los jugadores vivos dentro de su radio, aliados incluidos; el daño baja con la distancia y el chaleco lo reduce a la mitad.
 2. **Empuje de armas:** toda arma tirada en el mapa dentro del radio sale despedida en dirección contraria a la explosión, y vuela más lejos cuanto más cerca estaba.
 
-Cada regla es un mensaje de `GranadaHE` (`danar(jugador, centro)` y `empujar(arma, centro)`), se dispara con `POST /api/explosiones` y en ella participan tres clases del modelo: `GranadaHE`, `Jugador` y `Posicion`. Ver [Simulación de explosiones](#-simulación-de-explosiones-granada-he).
+Las dos reglas viven en `ExplosionService` (`danar(granada, jugador, centro)` y `empujar(granada, arma, centro)`), se disparan con `POST /api/explosiones` y en ellas participan tres clases del modelo: `GranadaHE`, `Jugador` y `Posicion`, que solo guardan el estado. Ver [Simulación de explosiones](#-simulación-de-explosiones-granada-he).
 
 ### Conceptos de POO aplicados
 
 * **Encapsulamiento y ocultamiento de información:** todos los atributos son `private` y no hay setters. La skin solo cambia mediante `aplicarSkin(...)`, la munición solo con `disparar()` / `recargar()` y los datos de un arma guardada solo con `actualizarCon(...)`. Desde que las armas son entidades JPA los atributos ya no son `final`, porque Hibernate los completa al leer de la base.
-* **Invariantes:** los constructores validan los datos y, si son inválidos, lanzan una excepción propia de la rama `DatoInvalidoException` (`PrecioNegativoException`, `CampoObligatorioException`, `CargadorInvalidoException`, etc.). La tienda nunca queda con saldo negativo y su catálogo se expone como lista de solo lectura.
+* **Invariantes:** las valida la capa service antes de usar o guardar un objeto (`ArmaService.validar`, `JugadorService.validar`, `TiendaService`). Si un dato es inválido se lanza una excepción propia de la rama `DatoInvalidoException` (`PrecioNegativoException`, `CampoObligatorioException`, `CargadorInvalidoException`, etc.). El dominio no tiene ningún `throw`: solo guarda el estado. La tienda nunca queda con saldo negativo y su catálogo se expone como lista de solo lectura.
 * **Herencia y generalización:** `Arma` (abstracta) → `ArmaDeFuego` / `Granada` (abstractas) → `Rifle`, `Pistola`, `GranadaHumo`, `GranadaHE`. La misma jerarquía se persiste con `@Inheritance(strategy = JOINED)`. Las excepciones también forman una jerarquía con raíz `Cs2Exception`.
 * **Sobrecarga (overloading):** constructores con distintas firmas en `Arma`, `Rifle`, `Pistola`, `GranadaHumo` y `Tienda`; métodos `aplicarSkin(String)` / `aplicarSkin(String, boolean)` y `FabricaArmas.crear(...)` con dos firmas.
 * **Sobrescritura (overriding):** las clases concretas implementan `ejecutarAccionPrincipal()` y `obtenerDetalles()` con `@Override`; `Rifle` y `GranadaHumo` redefinen `obtenerIconoHud()` y `Rifle` redefine el método `default` `emitirSonidoInspeccion()` de `UICapable`.
-* **Polimorfismo:** los controladores trabajan con `Arma` o `UICapable` sin preguntar por la clase concreta (`/api/armas/polimorfismo`, `/ui/{nombre}`, `/api/hud`).
+* **Polimorfismo:** los services y controllers trabajan con `Arma` o `UICapable` sin preguntar por la clase concreta (`/api/armas/polimorfismo`, `/ui/{nombre}`, `/api/hud`).
 * **Abstracción:** `Arma`, `ArmaDeFuego` y `Granada` son abstractas; `UICapable` es una interfaz con dos métodos abstractos y uno `default`, implementada por dos familias distintas: `Arma` y `Jugador`.
-* **Objeto valor:** `Posicion` no tiene id ni setters; moverla (`desplazarDesde(...)`) devuelve una posición nueva.
+* **Objeto valor:** `Posicion` no tiene id ni setters y se compara por valor; para moverla se crea una posición nueva (`ExplosionService.desplazarDesde(...)`).
 
 ---
 
@@ -99,13 +109,17 @@ cs2/
     │   ├── repository/                  ← capa de datos (interfaces)
     │   │   ├── ArmaRepository.java
     │   │   └── JugadorRepository.java
-    │   ├── service/                     ← capa de negocio
+    │   ├── service/                     ← capa de negocio: validaciones, reglas y excepciones
     │   │   ├── HudService.java          ← junta armas y jugadores como UICapable
     │   │   ├── ObjetoExternoService.java ← usa el cliente WebClient (filtro y 404)
-    │   │   ├── ArmaService.java         ← CRUD de armas + reglas del catálogo
-    │   │   ├── JugadorService.java
-    │   │   ├── ExplosionService.java    ← las dos reglas de la simulación
+    │   │   ├── ArmaService.java         ← CRUD de armas + invariantes + reglas del catálogo
+    │   │   ├── JugadorService.java      ← invariantes y reglas de los jugadores
+    │   │   ├── ExplosionService.java    ← las dos reglas de la simulación y su geometría
     │   │   ├── ResultadoExplosion.java
+    │   │   ├── DemostracionArmasService.java ← /api/armas/probar, /rafaga y /polimorfismo
+    │   │   ├── TiendaService.java       ← tiendas en memoria y regla de compra
+    │   │   ├── UIService.java           ← catálogo de /ui/{nombre}
+    │   │   ├── Validaciones.java        ← texto obligatorio y coordenadas finitas
     │   │   └── FabricaArmas.java        ← crea armas a partir del "tipo"
     │   └── rest/                        ← capa web
     │       ├── ManejadorErrores.java    ← un @ExceptionHandler por cada excepción
@@ -148,9 +162,11 @@ cs2/
         ├── client/
         │   └── ObjetosApiClientTest.java     ← WebClient con respuestas simuladas, sin internet
         ├── service/
-        │   ├── ArmaServiceTest.java
+        │   ├── ArmaServiceTest.java          ← reglas del catálogo e invariantes
         │   ├── JugadorServiceTest.java
-        │   └── ExplosionServiceTest.java
+        │   ├── ExplosionServiceTest.java     ← simulación completa contra H2
+        │   ├── ReglasExplosionTest.java      ← fórmulas, chaleco y geometría, sin base
+        │   └── TiendaServiceTest.java        ← regla de compra y validaciones
         └── rest/
             ├── ManejadorErroresTest.java     ← comprueba que no falte ningún handler
             └── controller/
@@ -252,7 +268,11 @@ Respuesta (resumida): `disparos` con 3 mensajes (munición 11, 10, 9), `municion
 ### `GET /api/armas/polimorfismo`
 Recorre una `List<Arma>` (rifle, pistola y granada de humo) y llama a los mismos métodos en cada una; cada clase responde con su propia sobrescritura.
 
+Los tres endpoints de demostración (`/probar`, `/rafaga`, `/polimorfismo`) delegan en `DemostracionArmasService`, que construye las armas, controla sus invariantes con `ArmaService.validar` y valida la ráfaga (de 1 a 100 disparos, solo armas de fuego).
+
 ### Tienda
+
+Las tiendas viven en memoria dentro de `TiendaService`, que también valida el nombre y el saldo y aplica la regla de compra (el arma existe y el saldo alcanza). `Tienda` solo guarda el estado.
 
 | Método y ruta | Descripción | Respuestas |
 |---|---|---|
@@ -272,7 +292,7 @@ curl -X POST "http://localhost:8080/tienda/tienda-0/comprar?indiceArma=0"
 ```
 
 ### `GET /ui/{nombre}`
-Devuelve el elemento de HUD de un arma (`ak47`/`rifle`, `usp`/`pistola`, `smoke`/`humo`). El controlador solo conoce la interfaz `UICapable`. Un nombre inexistente responde **404**.
+Devuelve el elemento de HUD de un arma (`ak47`/`rifle`, `usp`/`pistola`, `smoke`/`humo`). `UIService` busca el elemento y el controlador solo conoce la interfaz `UICapable`. Un nombre inexistente responde **404** (`ElementoUINoEncontradoException`).
 
 ```bash
 curl "http://localhost:8080/ui/ak47"
@@ -293,9 +313,9 @@ HTTP (JSON)
    │
    ▼
 ArmaCrudController   rest/controller   → convierte JSON ↔ objetos, sin lógica de negocio
-   │  ArmaRequest.aDominio() usa FabricaArmas y los constructores validan las invariantes
+   │  ArmaRequest.aDominio() usa FabricaArmas para construir el objeto del dominio (sin validar)
    ▼
-ArmaService          service           → reglas de negocio + @Transactional
+ArmaService          service           → invariantes + reglas de negocio + @Transactional
    │
    ▼
 ArmaRepository       repository        → interfaz JpaRepository<Arma, Long>; Spring genera la implementación
@@ -325,9 +345,22 @@ Cada clase de la jerarquía tiene su propia tabla, unida por el `id` de `armas`:
 
 Se eligió `JOINED` en lugar de `SINGLE_TABLE` porque así las columnas de cada subclase pueden ser `NOT NULL` y la base refleja la jerarquía. Al consultar `ArmaRepository` la respuesta es **polimórfica**: Hibernate devuelve el objeto de la clase concreta.
 
-### Validaciones del catálogo (`ArmaService`)
+### Invariantes y reglas del catálogo (`ArmaService`)
 
-Las invariantes de cada objeto (precio ≥ 0, nombre obligatorio, cargador > 0, etc.) las siguen validando los constructores del dominio. El service agrega estas validaciones del catálogo, cada una con su excepción:
+El dominio no valida: `ArmaService.validar(arma)` controla primero las **invariantes** de cada objeto y después las **reglas del catálogo**, cada una con su excepción.
+
+Invariantes (también para las armas en memoria de la demostración y de la tienda):
+
+| Invariante | Excepción | Respuesta |
+|---|---|---|
+| Nombre, bando y skin obligatorios | `CampoObligatorioException` | 400 |
+| Precio ≥ 0 | `PrecioNegativoException` | 400 |
+| Si está tirada en el mapa, coordenadas finitas | `CoordenadaInvalidaException` | 400 |
+| Arma de fuego: cargador > 0 y daño base > 0 | `CargadorInvalidoException` · `DanoInvalidoException` | 400 |
+| Granada: retardo ≥ 0; humo: duración > 0 | `TiempoRetardoInvalidoException` · `DuracionHumoInvalidaException` | 400 |
+| HE: radio > 0, daño máximo > 0, empuje ≥ 0 | `RadioExplosionInvalidoException` · `DanoInvalidoException` · `EmpujeInvalidoException` | 400 |
+
+Reglas del catálogo (solo para las armas guardadas en H2):
 
 | Validación | Excepción | Respuesta |
 |---|---|---|
@@ -372,8 +405,9 @@ Cuerpo JSON de `POST` y `PUT` (`tipo`, `nombre`, `precio` y `bando` son obligato
 ```bash
 curl -X POST http://localhost:8080/api/armas -H "Content-Type: application/json" \
      -d '{"tipo":"pistola","nombre":"Desert Eagle","precio":700,"bando":"CT/T","cargadorCapacidad":7,"danoBase":53}'
-# 201 {"id":6,"tipo":"Pistola","nombre":"Desert Eagle","precio":700,"bando":"CT/T","skin":"Vanilla",
-#      "detalles":"Pistola Desert Eagle | Daño: 53 | Cargador: 7","iconoHud":"ui/hud/icons/default_weapon.png"}
+# 201 {"id":10,"tipo":"Pistola","nombre":"Desert Eagle","precio":700,"bando":"CT/T","skin":"Vanilla",
+#      "detalles":"Pistola Desert Eagle | Daño: 53 | Cargador: 7","iconoHud":"ui/hud/icons/default_weapon.png","posicion":null}
+# Con la base limpia el id es 10: del 1 al 9 son la carga inicial (5 armas de catálogo, la HE con id 6 y 3 armas tiradas).
 
 curl -X POST http://localhost:8080/api/armas -H "Content-Type: application/json" \
      -d '{"tipo":"rifle","nombre":"ak-47","precio":2700,"bando":"T"}'
@@ -413,11 +447,11 @@ Los tests usan otro archivo de propiedades (`src/test/resources/application.prop
 
 | Clase | Qué aporta a la simulación |
 |---|---|
-| `GranadaHE` (hija de `Granada`) | Las dos reglas: `danar(jugador, centro)` y `empujar(arma, centro)`. Se apoya en `alcanza`, `calcularDano` y `calcularEmpuje`, y `detonar()` la consume |
-| `Jugador` | `recibirDano(dano)`: aplica el chaleco y no deja la vida por debajo de 0 |
-| `Posicion` | `distanciaA(otra)` y `desplazarDesde(centro, metros)`, que calcula a dónde vuela un arma |
+| `GranadaHE` (hija de `Granada`) | Guarda radio, daño máximo, empuje máximo y si ya fue detonada (`marcarDetonada()`) |
+| `Jugador` | Guarda vida, chaleco y posición; `perderVida(puntos)` descuenta lo que calculó el service |
+| `Posicion` | Guarda el punto x, y, z (objeto valor) |
 
-`ExplosionService` no calcula nada: busca la granada y los objetos en la base, la detona, le pide `danar` para cada jugador y `empujar` para cada arma, y la transacción guarda los cambios. El controller solo dispara el service.
+Las clases del dominio solo guardan el estado. **`ExplosionService` tiene las dos reglas**: busca la granada en la base y controla que no esté detonada (`GranadaYaDetonadaException`). Después recorre los jugadores con `danar(...)` (fórmula, chaleco y vida mínima 0) y las armas con `empujar(...)` (fórmula y `desplazarDesde`). La distancia la calcula con `distancia(a, b)`, y la transacción guarda los cambios. El controller solo dispara el service.
 
 ### Las fórmulas
 
@@ -531,7 +565,7 @@ Ningún error usa `IllegalArgumentException` ni excepciones genéricas: cada cas
 ```text
 RuntimeException
 └── Cs2Exception (abstracta)
-    ├── DatoInvalidoException (abstracta) ─────────── invariantes del dominio → 400
+    ├── DatoInvalidoException (abstracta) ─────────── invariantes (las valida el service) → 400
     │   ├── CampoObligatorioException        ├── PrecioNegativoException
     │   ├── CargadorInvalidoException        ├── DanoInvalidoException
     │   ├── TiempoRetardoInvalidoException   ├── DuracionHumoInvalidaException
@@ -557,7 +591,7 @@ RuntimeException
         └── ServicioExternoNoDisponibleException ──── 502
 ```
 
-* El dominio y los services lanzan estas excepciones sin saber nada de HTTP.
+* Solo la capa service lanza estas excepciones, sin saber nada de HTTP. El dominio no lanza ninguna.
 * `ManejadorErrores` tiene **un `@ExceptionHandler` por cada excepción concreta**, sin agrupar varias en un mismo método y sin `try/catch`. Cada handler decide el código HTTP y responde `{"status", "error", "tipo", "mensaje"}`.
 * También maneja, cada una con su handler, las excepciones de Spring de un pedido mal armado: JSON inválido, parámetro faltante, parámetro de otro tipo y restricción de la base violada.
 * `ManejadorErroresTest` busca todas las clases concretas de la jerarquía y falla si alguna no tiene su handler, o si un handler agrupa varias.
@@ -572,13 +606,14 @@ Las usamos así por dos razones:
 1. Ni el service ni el controller pueden arreglar una regla rota; el único que la atiende es `ManejadorErrores`, así que obligar a declararla en cada capa no aporta nada.
 2. `@Transactional` de Spring hace *rollback* automático solo con excepciones no comprobadas. Si la explosión falla a mitad de camino, no queda ningún cambio a medias en la base.
 
-**¿Quién la lanza?** El objeto del juego, en la mayoría de los casos:
+**¿Quién la lanza?** Siempre la capa service. El dominio solo guarda el estado:
 
-* los constructores del dominio (precio negativo, vida fuera de rango, radio inválido);
-* `GranadaHE.detonar()` (granada ya detonada);
-* `Jugador.recibirDano(...)`.
+* `ArmaService.validar(...)` y `JugadorService.validar(...)`: invariantes (precio negativo, vida fuera de rango, radio inválido, coordenada no finita);
+* `ArmaService` y `JugadorService`: reglas del catálogo que consultan la base (nombre repetido, bando, precio máximo, id inexistente);
+* `ExplosionService`: granada ya detonada, arma que no es HE;
+* `DemostracionArmasService`, `TiendaService` y `UIService`: ráfaga inválida, saldo negativo, tienda o elemento inexistente.
 
-Las validaciones del catálogo (nombre repetido, bando, precio máximo) las lanza el service, porque necesitan consultar la base. Los DTO de pedido lanzan `CampoObligatorioException` si al JSON le falta un campo. El controller no lanza ninguna.
+Los DTO de pedido solo lanzan `CampoObligatorioException` cuando al JSON le falta un dato sin el cual no se puede construir el objeto (precio o una coordenada). El controller no lanza ninguna.
 
 ### Colección de Insomnia
 
@@ -637,8 +672,8 @@ Variables del entorno: `base_url` (`http://localhost:8080`), `id` (arma para `GE
 **¿Cómo se distingue el subtipo en el JSON?**
 * Al crear, el campo `"tipo"` (`rifle`, `pistola`, `granada-humo`, `granada-he`) lo lee `FabricaArmas`, que llama al constructor de negocio que corresponde.
 * Al listar, la respuesta trae `"tipo": "Rifle"`, con el nombre de la clase concreta.
-* No usamos `@JsonTypeInfo`/`@JsonSubTypes` sobre las entidades, porque Jackson armaría el objeto con el constructor vacío y asignando campos. Eso se saltearía los constructores que validan las invariantes.
-* Por eso el JSON entra a un DTO (`ArmaRequest`) y del DTO se pasa al dominio por un constructor.
+* No usamos `@JsonTypeInfo`/`@JsonSubTypes` sobre las entidades, porque Jackson armaría el objeto con el constructor vacío y asignando campos, y la entidad quedaría atada al formato del JSON.
+* Por eso el JSON entra a un DTO (`ArmaRequest`), del DTO se pasa al dominio por un constructor y después `ArmaService` valida las invariantes.
 
 **Interfaz y repositorio.**
 * `ArmaRepository` y `JugadorRepository` son interfaces: nosotros declaramos los mensajes (`existsByNombreIgnoreCase`, `findByBandoOrderByIdAsc`) y Spring Data genera la implementación.
@@ -651,13 +686,13 @@ Variables del entorno: `base_url` (`http://localhost:8080`), `id` (arma para `GE
 * Lo usa `GET /api/hud`, que recibe una `List<UICapable>` con objetos de las dos familias leídos de H2 y les manda los mismos mensajes (ver [Protocolo del dominio](#️-protocolo-del-dominio-uicapable)).
 
 **Ocultamiento.**
-* Las reglas numéricas las sostienen las clases del dominio, en sus constructores y mensajes:
-  - precio ≥ 0, cargador > 0 y daño > 0;
-  - vida entre 0 y 100, y `recibirDano` nunca la deja negativa;
-  - radio > 0 y coordenadas finitas;
-  - una granada se detona una sola vez.
-* No hay setters públicos. El constructor vacío que exige JPA es `protected`, y JPA completa los campos directamente (acceso por campo, porque `@Id` está sobre el atributo).
-* Las reglas del catálogo (precio ≤ $16.000, nombre único, bando) las sostiene `ArmaService`.
+* El dominio guarda el estado encapsulado: atributos `private`, sin setters públicos, y el estado solo cambia por mensajes (`aplicarSkin`, `actualizarCon`, `ubicarEn`, `disparar`, `recargar`, `perderVida`, `marcarDetonada`). El constructor vacío que exige JPA es `protected`, y JPA completa los campos directamente (acceso por campo, porque `@Id` está sobre el atributo).
+* Las reglas numéricas las sostiene la capa service, antes de usar o guardar un objeto:
+  - precio ≥ 0, cargador > 0 y daño > 0 (`ArmaService.validar`);
+  - vida entre 0 y 100 y coordenadas finitas (`JugadorService.validar`);
+  - radio > 0, y la vida nunca queda negativa después de una explosión (`ExplosionService`);
+  - una granada se detona una sola vez (`ExplosionService`).
+* Las reglas del catálogo (precio ≤ $16.000, nombre único, bando) también las sostiene `ArmaService`.
 * **La prueba en Insomnia:** la carpeta *2. Armas - errores* manda todos los POST ilegales (precio negativo, cargador 0, tipo desconocido…) y termina con *Contar armas*, que sigue mostrando las mismas 14 armas: ninguno guardó nada.
 
 **PUT y PATCH.**
@@ -669,7 +704,7 @@ Variables del entorno: `base_url` (`http://localhost:8080`), `id` (arma para `GE
 **DELETE.**
 * Borrar un arma es **sacarla del catálogo**: se elimina su fila de `armas` y de su tabla hija.
 * Responde 204, y después el `GET` da 404, igual que un segundo `DELETE`.
-* No pasa por un mensaje del dominio, porque ninguna regla del juego impide borrar un arma: el service solo verifica que exista (`ArmaNoEncontradaException`).
+* Ninguna regla del juego impide borrar un arma: el service solo verifica que exista (`ArmaNoEncontradaException`).
 * Los jugadores no se borran: un jugador **eliminado** por la explosión sigue en la base con 0 de vida y estado `ELIMINADO`. En el juego, morir es un estado, no desaparecer.
 
 **Dos reglas.**
@@ -782,12 +817,8 @@ classDiagram
         -boolean detonada
         +GranadaHE(String nombre, int precio, String bando)
         +GranadaHE(String nombre, int precio, String bando, float retardo, float radio, int danoMaximo, float empuje)
-        +alcanza(double distancia) boolean
-        +calcularDano(double distancia) int
-        +calcularEmpuje(double distancia) double
-        +danar(Jugador jugador, Posicion centro) Optional~Impacto~
-        +empujar(Arma arma, Posicion centro) Optional~Desplazamiento~
-        +detonar()
+        +marcarDetonada()
+        +isDetonada() boolean
         +ejecutarAccionPrincipal() String
         +obtenerDetalles() String
         +obtenerIconoHud() String
@@ -802,7 +833,7 @@ classDiagram
         -Posicion posicion
         +Jugador(String nombre, String bando, Posicion posicion)
         +Jugador(String nombre, String bando, int vida, boolean chaleco, Posicion posicion)
-        +recibirDano(int dano) int
+        +perderVida(int puntos)
         +estaVivo() boolean
         +obtenerIconoHud() String
         +etiquetaHud() String
@@ -814,8 +845,10 @@ classDiagram
         -Double x
         -Double y
         -Double z
-        +distanciaA(Posicion otra) double
-        +desplazarDesde(Posicion centro, double metros) Posicion
+        +Posicion(double x, double y, double z)
+        +getX() double
+        +getY() double
+        +getZ() double
     }
 
     class Tienda {
@@ -825,7 +858,7 @@ classDiagram
         +Tienda()
         +Tienda(String nombre, int saldoInicial)
         +agregarArma(Arma arma)
-        +comprarArma(int indice) ResultadoCompra
+        +registrarCompra(int indice)
         +mostrarCatalogo() String
         +getArmasDisponibles() List~Arma~
     }
@@ -847,12 +880,10 @@ classDiagram
     Granada <|-- GranadaHE
     Arma o-- "0..1" Posicion : posicion
     Jugador *-- "1" Posicion : posicion
-    GranadaHE ..> Jugador : danar (regla 1)
-    GranadaHE ..> Arma : empujar (regla 2)
-    GranadaHE ..> Posicion : mide distancias
     Tienda o-- "0..*" Arma : armasDisponibles
-    Tienda ..> ResultadoCompra
 ```
+
+El dominio solo guarda el estado. Las reglas de la explosión (daño a `Jugador`, empuje de `Arma`, distancias entre `Posicion`) y la de compra (`ResultadoCompra`) están en `ExplosionService` y `TiendaService` (ver el diagrama de capas).
 
 ### Capas: interfaz, repositorio, controller y excepciones
 
@@ -873,15 +904,13 @@ classDiagram
         <<abstract>>
     }
     class GranadaHE {
-        +danar(Jugador, Posicion)
-        +empujar(Arma, Posicion)
+        +marcarDetonada()
     }
     class Jugador {
-        +recibirDano(int) int
+        +perderVida(int)
     }
     class Posicion {
         <<embeddable>>
-        +distanciaA(Posicion) double
     }
 
     class JpaRepository {
@@ -901,8 +930,18 @@ classDiagram
     class ArmaCrudController
     class ExplosionController
     class HudController
-    class ArmaService
-    class ExplosionService
+    class ArmaService {
+        +validar(Arma)
+    }
+    class JugadorService {
+        +validar(Jugador)
+    }
+    class ExplosionService {
+        +explotar(Long, Posicion)
+        ~danar(GranadaHE, Jugador, Posicion)
+        ~empujar(GranadaHE, Arma, Posicion)
+        ~distancia(Posicion, Posicion) double
+    }
     class HudService
 
     class RuntimeException
@@ -948,7 +987,9 @@ classDiagram
     ArmaService --> ArmaRepository
     ExplosionService --> ArmaRepository
     ExplosionService --> JugadorRepository
-    ExplosionService ..> GranadaHE : dispara las reglas
+    ExplosionService ..> GranadaHE : regla 1 y 2
+    ExplosionService ..> Jugador : daña
+    ExplosionService ..> Posicion : mide y desplaza
     HudService --> ArmaRepository
     HudService --> JugadorRepository
 
@@ -960,7 +1001,8 @@ classDiagram
     ReglaNegocioException <|-- GranadaYaDetonadaException
     RecursoNoEncontradoException <|-- ArmaNoEncontradaException
     DatoInvalidoException <|-- VidaInvalidaException
-    GranadaHE ..> GranadaYaDetonadaException : lanza
+    ExplosionService ..> GranadaYaDetonadaException : lanza
+    JugadorService ..> VidaInvalidaException : lanza
     ManejadorErrores ..> Cs2Exception : atiende cada hija
 ```
 
@@ -971,6 +1013,7 @@ Cómo leer este diagrama:
 | **Herencia** («es un») | `<\|--` línea continua | `Granada` es un `Arma`; `GranadaHE` es una `Granada` |
 | **Implementación de interfaz** | `<\|..` línea punteada | `Arma` y `Jugador` cumplen el protocolo `UICapable` |
 | **Uso del repositorio** | `-->` y `..>` | Los services usan las **interfaces** `ArmaRepository` y `JugadorRepository`, que extienden `JpaRepository` (Spring genera la implementación) |
+| **Reglas y excepciones en el service** | `..>` | `ExplosionService` aplica las reglas sobre `GranadaHE`, `Jugador` y `Posicion` y lanza `GranadaYaDetonadaException`; `JugadorService` lanza `VidaInvalidaException`. El dominio no lanza ninguna |
 | **Jerarquía de excepciones** | `<\|--` desde `RuntimeException` | `Cs2Exception` → 3 ramas abstractas → excepciones concretas (acá se muestra una de cada rama; la lista completa está en [Jerarquía de excepciones](#-jerarquía-de-excepciones)) |
 
 ---
@@ -981,7 +1024,7 @@ Cómo leer este diagrama:
 
 | Clase | Qué se agregó | Firmas |
 |---|---|---|
-| `Arma` | Tres constructores encadenados con `this(...)`. Solo el más completo valida, así que todas las firmas dejan el objeto en un estado válido | `Arma()` · `Arma(nombre, precio, bando)` · `Arma(nombre, precio, bando, skin)` |
+| `Arma` | Tres constructores encadenados con `this(...)`. Solo el más completo asigna los atributos, así que todas las firmas inicializan el estado de la misma forma (la validación la hace `ArmaService`) | `Arma()` · `Arma(nombre, precio, bando)` · `Arma(nombre, precio, bando, skin)` |
 | `Arma` | Sobrecarga de un mensaje del dominio: aplicar una skin común o una StatTrak™ | `aplicarSkin(String)` · `aplicarSkin(String, boolean)` |
 | `Rifle`, `Pistola`, `GranadaHumo`, `GranadaHE` | Un constructor simple con los valores estándar de CS2 y otro completo. Ambos llaman a `super(...)` | p. ej. `Rifle(nombre, precio, bando)` · `Rifle(nombre, precio, bando, cargador, daño, tieneMira)` |
 | `Jugador` | Un constructor con vida completa y sin chaleco, y otro con vida y chaleco | `Jugador(nombre, bando, posicion)` · `Jugador(nombre, bando, vida, chaleco, posicion)` |
@@ -1002,7 +1045,7 @@ Ejemplo: `new Rifle("AK-47", 2700, "T")` crea un rifle estándar y `new Rifle("A
 | `admiteSkin()` | `Arma` (devuelve `true`) | `Granada` | Las granadas devuelven `false`; `ArmaService` lo usa sin preguntar por la clase concreta |
 | `actualizarCon(Arma)` | `Arma` (copia los datos comunes) | `ArmaDeFuego`, `Granada`, `Rifle`, `Pistola`, `GranadaHumo`, `GranadaHE` | Cada clase llama a `super.actualizarCon(...)` y copia sus propios atributos; lo usa el `PUT` del CRUD |
 
-Los controladores usan estas sobrescrituras a través del tipo padre: `ArmaController` trabaja con `Arma`, y `UIController` y `HudController` con `UICapable`, sin preguntar por la clase concreta. Se ve en `GET /api/armas/polimorfismo`, `GET /ui/{nombre}` y `GET /api/hud`.
+Los services usan estas sobrescrituras a través del tipo padre: `DemostracionArmasService` trabaja con `Arma`, y `UIService` y `HudService` con `UICapable`, sin preguntar por la clase concreta. Se ve en `GET /api/armas/polimorfismo`, `GET /ui/{nombre}` y `GET /api/hud`.
 
 ### Cómo distinguir una de la otra
 

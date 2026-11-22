@@ -81,9 +81,9 @@ Campos opcionales del cuerpo:
 
 ## 4. Invariantes
 
-No hay setters públicos. El constructor vacío que exige JPA es `protected`. Todo cambio de estado pasa por constructores o mensajes que validan.
+No hay setters públicos. El constructor vacío que exige JPA es `protected`. El dominio solo guarda el estado encapsulado y no lanza excepciones: las invariantes las valida la capa service (`ArmaService.validar`, `JugadorService.validar`, `ExplosionService`) antes de usar o guardar un objeto. *(Actualizado al cerrar la observación 2 de la corrección del POO-08.)*
 
-| Clase | Invariante | Excepción | HTTP |
+| Clase | Invariante (la valida el service) | Excepción | HTTP |
 |---|---|---|---|
 | `Arma` | `nombre`, `bando` y `skin` obligatorios | `CampoObligatorioException` | 400 |
 | `Arma` | `precio ≥ 0` | `PrecioNegativoException` | 400 |
@@ -92,8 +92,8 @@ No hay setters públicos. El constructor vacío que exige JPA es `protected`. To
 | `Granada` | `tiempoRetardo ≥ 0` | `TiempoRetardoInvalidoException` | 400 |
 | `GranadaHumo` | `duracionHumo > 0` | `DuracionHumoInvalidaException` | 400 |
 | `GranadaHE` | `radioExplosion > 0`, `danoMaximo > 0`, `empujeMaximo ≥ 0` | `RadioExplosionInvalidoException`, `DanoInvalidoException`, `EmpujeInvalidoException` | 400 |
-| `GranadaHE` | explota una sola vez (se consume) | `GranadaYaDetonadaException` | 409 |
-| `Jugador` | `0 ≤ vida ≤ 100`; `recibirDano` nunca la deja negativa | `VidaInvalidaException` | 400 |
+| `GranadaHE` | explota una sola vez (se consume; lo controla `ExplosionService`) | `GranadaYaDetonadaException` | 409 |
+| `Jugador` | `0 ≤ vida ≤ 100`; una explosión nunca la deja negativa | `VidaInvalidaException` | 400 |
 | `Jugador` | siempre tiene posición | `CampoObligatorioException` | 400 |
 | `Posicion` | coordenadas finitas | `CoordenadaInvalidaException` | 400 |
 
@@ -112,11 +112,11 @@ Reglas del catálogo, en `ArmaService` y `JugadorService`:
 
 ## 5. Las dos reglas y la simulación
 
-Las dos reglas son **mensajes de `GranadaHE`**. El controller solo dispara la simulación, y en ella participan las tres clases: `GranadaHE`, `Jugador` y `Posicion`.
+Las dos reglas están en **`ExplosionService`**. El controller solo dispara la simulación, y en ella participan las tres clases del modelo: `GranadaHE`, `Jugador` y `Posicion`, que guardan el estado.
 
-1. **Regla 1, daño (`danar(jugador, centro)`):** una granada HE daña a todos los jugadores vivos dentro de su radio, aliados incluidos. El daño baja con la distancia y el chaleco lo reduce a la mitad.
+1. **Regla 1, daño (`danar(granada, jugador, centro)`):** una granada HE daña a todos los jugadores vivos dentro de su radio, aliados incluidos. El daño baja con la distancia y el chaleco lo reduce a la mitad.
    Fórmula: `daño = danoMaximo × (1 − distancia / radio)`. Con chaleco, la mitad. La vida nunca baja de 0.
-2. **Regla 2, empuje (`empujar(arma, centro)`):** toda arma tirada en el mapa dentro del radio sale despedida en dirección contraria a la explosión, y vuela más lejos cuanto más cerca estaba.
+2. **Regla 2, empuje (`empujar(granada, arma, centro)`):** toda arma tirada en el mapa dentro del radio sale despedida en dirección contraria a la explosión, y vuela más lejos cuanto más cerca estaba.
    Fórmula: `metros = empujeMaximo × (1 − distancia / radio)`. Si el arma estaba justo en el centro, sale hacia arriba.
 
 **Escenario de ejemplo** (se carga solo con la base vacía; HE con id 6, radio 8 m, daño máximo 98, empuje máximo 6 m). `POST /api/explosiones` con `{"granadaId": 6, "x": 0, "y": 0, "z": 0}`:
@@ -213,7 +213,7 @@ Después de la simulación, `JUGADORES.VIDA` y las posiciones de las armas muest
 ### Tests automáticos
 
 ```bash
-./mvnw test     # 55 tests: dominio, services con H2 en memoria, controllers y handlers
+./mvnw test     # 66 tests: dominio, services (con H2 en memoria y sin base), WebClient, controllers y handlers
 ```
 
 `ManejadorErroresTest` comprueba que cada excepción concreta de la jerarquía tenga su propio handler.
@@ -230,8 +230,8 @@ Después de la simulación, `JUGADORES.VIDA` y las posiciones de las armas muest
 | Interfaz de dominio usada por un endpoint | `UICapable` ← `Arma`, `Jugador`; `GET /api/hud` |
 | Repositorio como interfaz con consultas propias | `repository/ArmaRepository`, `repository/JugadorRepository` |
 | CRUD REST | `rest/controller/ArmaCrudController` |
-| Dos reglas en el dominio y simulación persistida | `GranadaHE.danar(...)`, `GranadaHE.empujar(...)`; `POST /api/explosiones` |
+| Dos reglas y simulación persistida | `ExplosionService.danar(...)`, `ExplosionService.empujar(...)` sobre `GranadaHE`, `Jugador` y `Posicion`; `POST /api/explosiones` |
 | Jerarquía de excepciones y handler por tipo | `exception/`; `rest/ManejadorErrores` |
-| Colección de Insomnia | `insomnia/cs2-armas-crud.json` (58 pedidos, 9 carpetas) |
+| Colección de Insomnia | `insomnia/cs2-armas-crud.json` (63 pedidos, 10 carpetas) |
 | Diagrama, reglas, «Qué hay que pensar» | `README.md` |
 | Bitácora de IA | `BITACORA.md` |

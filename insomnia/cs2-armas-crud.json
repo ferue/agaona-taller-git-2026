@@ -144,7 +144,7 @@
       "name": "Crear rifle (AWP)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/armas",
-      "description": "Respuesta esperada: 201 + Location",
+      "description": "Respuesta esperada: 201 + Location. Con la base limpia queda con id 10 (del 1 al 9 son la carga inicial; la HE es la 6)",
       "metaSortKey": 3,
       "headers": [
         {
@@ -166,7 +166,7 @@
       "name": "Crear pistola (Desert Eagle)",
       "method": "POST",
       "url": "{{ _.base_url }}/api/armas",
-      "description": "Respuesta esperada: 201",
+      "description": "Respuesta esperada: 201. Con la base limpia queda con id 11, porque la AWP de arriba tomó el 10 (el ejemplo del README crea solo la Desert Eagle y por eso muestra id 10)",
       "metaSortKey": 4,
       "headers": [
         {

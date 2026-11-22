@@ -1,4 +1,4 @@
-# Bitácora de Desarrollo — Taller LP3: POO-06 y POO-08 (Counter-Strike 2)
+# Bitácora de Desarrollo — Taller LP3: POO-06, POO-08 y POO-09 (Counter-Strike 2)
 
 **Asignatura:** Lenguaje de Programación 3 (CYT646)  
 **Edición:** 2026  
@@ -17,6 +17,7 @@
 | 4 | 29/10/2026 | Claude (Anthropic), mediante Claude Code | `claude-opus-5-5` (Claude Opus 5.5) |
 | 5 | 10/11/2026 | Claude (Anthropic), mediante Claude Code | `claude-opus-5-5` (Claude Opus 5.5) |
 | 6 | 18/11/2026 | Claude (Anthropic), mediante Claude Code | `claude-opus-5-5` (Claude Opus 5.5) |
+| 7 | 22/11/2026 | Claude (Anthropic), mediante Claude Code | `claude-opus-5-5` (Claude Opus 5.5) |
 
 ---
 
@@ -183,3 +184,30 @@
 ### Verificación realizada y limitaciones
 * Desde el entorno de la IA no se pudieron descargar las dependencias nuevas (WebClient y springdoc). El código se compiló con `javac` contra versiones mínimas de esas clases, y se comprobó que las 28 excepciones concretas tienen su handler.
 * Falta que el alumno ejecute `.\mvnw.cmd test` (descarga las dependencias), arranque la app y abra `/swagger-ui.html` y `/api/objetos-externos`.
+* El alumno lo ejecutó en su notebook: **59 tests, 0 fallas, BUILD SUCCESS**, y Swagger UI y `/api/objetos-externos` respondieron.
+
+---
+
+## 🤖 Sesión 7 — Cierre de las observaciones del POO-08 (22/11/2026)
+
+* **Asistente / Agente de IA:** Claude (Anthropic), mediante Claude Code
+* **Modelo de LLM exacto:** Claude Opus 5.5 (`claude-opus-5-5`)
+* **Modo de trabajo:** la IA editó solo los archivos locales, en la rama `feature/RESTApi`; el alumno hace los commits y el push.
+
+### Resumen de prompts e interacciones
+
+15. **Revisar todo el proyecto y cerrar las observaciones del POO-08:**
+    * *Prompt:* «Antes de hacer los commits, podés ver que todo esté bien? Recordás el problema con los ids del 008? Corregímelo todo, y luego hacer un recorrido en todo el proyecto encontrando errores y corregilos». Y después: «El profesor me pidió pasar todo a la capa service, así que proseguí con eso».
+    * *Acción:*
+      * **Dominio sin lógica:** `Arma`, sus hijas, `Jugador`, `Posicion` y `Tienda` ya no validan ni lanzan excepciones (el paquete `domain/` no importa `exception/`). Solo guardan el estado y tienen mensajes simples: `aplicarSkin`, `ubicarEn`, `actualizarCon`, `disparar`, `recargar`, `perderVida`, `marcarDetonada`, `registrarCompra`.
+      * **Invariantes al service:** `ArmaService.validar(...)` (nombre, bando, skin, precio, coordenadas, cargador, daño, retardo, duración del humo, radio y empuje) y `JugadorService.validar(...)` (nombre, bando, vida, posición). Las excepciones y los códigos HTTP son los mismos.
+      * **Reglas al service:** `ExplosionService` tiene ahora las dos reglas (`danar` y `empujar`), sus fórmulas, el chaleco, la distancia, el desplazamiento y el control de granada ya detonada.
+      * **Controllers sin lógica:** nuevos `DemostracionArmasService` (probar, ráfaga, polimorfismo), `TiendaService` (tiendas en memoria y regla de compra) y `UIService` (catálogo de `/ui`).
+      * **ids:** el curl de la Desert Eagle del README mostraba `id 6`; con la base limpia es `10`. También se aclaró en Insomnia (dentro de la colección la AWP toma el 10 y la Desert Eagle el 11).
+      * Tests: los de invariantes y reglas pasan del dominio a los services (`ArmaServiceTest`, `JugadorServiceTest`, `ReglasExplosionTest`, `TiendaServiceTest`).
+      * README (sección «Situación del POO-08», invariantes, simulación, excepciones, «Qué hay que pensar», diagramas) y especificaciones (`.md` y PDF) actualizados.
+
+### Verificación realizada
+* `mvn test` sin conexión con las librerías de la notebook del alumno y JDK 21: **66 tests, 0 fallas, BUILD SUCCESS**.
+* App levantada con la base recién creada y los 63 pedidos de la colección ejecutados en orden: los 58 de las carpetas 1 a 9 y el de `/v3/api-docs` respondieron el código y el tipo de excepción esperados. Los 4 de `restful-api.dev` de la carpeta 10 dieron 502 solo porque el entorno de la IA no tiene salida a internet; en la notebook del alumno responden bien.
+* `POST` de la Desert Eagle con la base limpia → `201` con `"id":10`.
