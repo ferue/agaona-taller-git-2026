@@ -16,6 +16,7 @@
 | 3 | 28/10/2026 | Claude (Anthropic), mediante Claude Code | `claude-opus-5-5` (Claude Opus 5.5) |
 | 4 | 29/10/2026 | Claude (Anthropic), mediante Claude Code | `claude-opus-5-5` (Claude Opus 5.5) |
 | 5 | 10/11/2026 | Claude (Anthropic), mediante Claude Code | `claude-opus-5-5` (Claude Opus 5.5) |
+| 6 | 18/11/2026 | Claude (Anthropic), mediante Claude Code | `claude-opus-5-5` (Claude Opus 5.5) |
 
 ---
 
@@ -161,3 +162,24 @@
 * App levantada con la base recién creada y los 58 pedidos de la colección ejecutados en orden: todos respondieron el código y el tipo de excepción esperados. Después de los POST ilegales siguen siendo 14 armas.
 * Los dos diagramas Mermaid del README se generaron con `mmdc` sin errores.
 
+---
+
+## 🤖 Sesión 6 — WebClient y OpenAPI, rumbo al POO-09 (18/11/2026)
+
+* **Asistente / Agente de IA:** Claude (Anthropic), mediante Claude Code
+* **Modelo de LLM exacto:** Claude Opus 5.5 (`claude-opus-5-5`)
+* **Modo de trabajo:** la IA editó solo los archivos locales, en la rama `feature/RESTApi`; el alumno hace los commits y el push.
+
+### Resumen de prompts e interacciones
+
+13. **Consumir una API REST con WebClient** (paso compartido en Zulip):
+    * *Prompt:* «https://api.restful-api.dev/objects necesito que agregues un servicio que consulte esta apirest con el web client de springboot».
+    * *Acción:* dependencia `spring-boot-starter-webclient`; `ObjetosApiClient` (URL y tiempo de espera en `application.properties`), `ObjetoExternoService`, `GET /api/objetos-externos` y `/{id}`; rama nueva de excepciones `ServicioExternoException` → `ServicioExternoNoDisponibleException` (502) y `ObjetoExternoNoEncontradoException` (404), cada una con su handler; `ObjetosApiClientTest` con respuestas simuladas.
+14. **OpenAPI y Swagger UI** (paso compartido en Zulip):
+    * *Prompt:* «Agrega OpenAPI a todos los servicios REST y swaggerUI al proyecto».
+    * *Acción:* dependencia `springdoc-openapi-starter-webmvc-ui` 3.2.0 (la línea 3.x es la de Spring Boot 4); `OpenApiConfig` con título, descripción de las dos reglas y licencia; `@Tag`, `@Operation` y `@ApiResponse` en todos los controllers; `@Schema` con ejemplos en los cuerpos JSON. Documento en `/v3/api-docs` y Swagger UI en `/swagger-ui.html`.
+    * README (secciones nuevas, estructura y jerarquía) y colección de Insomnia (carpeta 10) actualizados.
+
+### Verificación realizada y limitaciones
+* Desde el entorno de la IA no se pudieron descargar las dependencias nuevas (WebClient y springdoc). El código se compiló con `javac` contra versiones mínimas de esas clases, y se comprobó que las 28 excepciones concretas tienen su handler.
+* Falta que el alumno ejecute `.\mvnw.cmd test` (descarga las dependencias), arranque la app y abra `/swagger-ui.html` y `/api/objetos-externos`.

@@ -53,6 +53,8 @@ Cada regla es un mensaje de `GranadaHE` (`danar(jugador, centro)` y `empujar(arm
 * **Java 21**
 * **Spring Boot 4.1** (Spring Web MVC)
 * **Spring Data JPA** (Hibernate) y **H2 Database**
+* **WebClient** (`spring-boot-starter-webclient`) para consumir APIs externas
+* **springdoc-openapi** 3.2 para el documento **OpenAPI 3** y **Swagger UI**
 * **Insomnia** para probar el CRUD
 * **Maven** (con Maven Wrapper)
 * **JUnit 5**
@@ -85,15 +87,21 @@ cs2/
     │   ├── exception/                   ← jerarquía de excepciones
     │   │   ├── Cs2Exception.java        ← raíz
     │   │   ├── validacion/              ← DatoInvalidoException y 13 hijas (400)
-    │   │   ├── noencontrado/            ← RecursoNoEncontradoException y 4 hijas (404)
-    │   │   └── negocio/                 ← ReglaNegocioException y 9 hijas (400 / 409)
+    │   │   ├── noencontrado/            ← RecursoNoEncontradoException y 5 hijas (404)
+    │   │   ├── negocio/                 ← ReglaNegocioException y 9 hijas (400 / 409)
+    │   │   └── externo/                 ← ServicioExternoException y 1 hija (502)
+    │   ├── client/                      ← clientes HTTP hacia APIs ajenas (WebClient)
+    │   │   ├── ObjetosApiClient.java    ← consulta https://api.restful-api.dev
+    │   │   └── ObjetoExternoDto.java
     │   ├── config/
-    │   │   └── CargaInicialArmas.java   ← catálogo y escenario de explosión de ejemplo
+    │   │   ├── CargaInicialArmas.java   ← catálogo y escenario de explosión de ejemplo
+    │   │   └── OpenApiConfig.java       ← título y descripción del documento OpenAPI
     │   ├── repository/                  ← capa de datos (interfaces)
     │   │   ├── ArmaRepository.java
     │   │   └── JugadorRepository.java
     │   ├── service/                     ← capa de negocio
     │   │   ├── HudService.java          ← junta armas y jugadores como UICapable
+    │   │   ├── ObjetoExternoService.java ← usa el cliente WebClient (filtro y 404)
     │   │   ├── ArmaService.java         ← CRUD de armas + reglas del catálogo
     │   │   ├── JugadorService.java
     │   │   ├── ExplosionService.java    ← las dos reglas de la simulación
@@ -108,6 +116,7 @@ cs2/
     │       │   ├── JugadorController.java    ← /api/jugadores
     │       │   ├── ExplosionController.java  ← /api/explosiones
     │       │   ├── HudController.java        ← /api/hud (usa la interfaz UICapable)
+    │       │   ├── ObjetoExternoController.java ← /api/objetos-externos (WebClient)
     │       │   ├── TiendaController.java
     │       │   └── UIController.java
     │       ├── request/
@@ -119,6 +128,7 @@ cs2/
     │           ├── ArmaResponse.java
     │           ├── ArmaGuardadaResponse.java
     │           ├── JugadorResponse.java
+    │           ├── ObjetoExternoResponse.java
     │           ├── ExplosionResponse.java
     │           ├── HudElementoResponse.java
     │           ├── PosicionResponse.java
@@ -135,6 +145,8 @@ cs2/
         │   ├── PosicionTest.java
         │   ├── GranadaHETest.java
         │   └── JugadorTest.java
+        ├── client/
+        │   └── ObjetosApiClientTest.java     ← WebClient con respuestas simuladas, sin internet
         ├── service/
         │   ├── ArmaServiceTest.java
         │   ├── JugadorServiceTest.java
@@ -472,6 +484,46 @@ Después de la simulación, el HUD ya muestra el estado persistido: Lobo aparece
 
 ---
 
+## 🌐 Consumo de una API externa con WebClient
+
+El servicio consulta la API pública **https://api.restful-api.dev** con **WebClient**, el cliente HTTP de Spring. Es la misma pieza que en POO-09 se usa para llamar a las APIs de los compañeros (A2 y A3).
+
+| Capa | Clase | Qué hace |
+|---|---|---|
+| Cliente | `client/ObjetosApiClient` | Arma el `WebClient` con la URL base y hace `GET /objects` y `GET /objects/{id}`. Si la API no responde a tiempo o devuelve un error, lanza `ServicioExternoNoDisponibleException`. |
+| Service | `service/ObjetoExternoService` | Filtra por nombre y, si el objeto no existe, lanza `ObjetoExternoNoEncontradoException`. |
+| Controller | `rest/controller/ObjetoExternoController` | `GET /api/objetos-externos` (opcional `?nombre=apple`) y `GET /api/objetos-externos/{id}`. |
+
+La URL y el tiempo máximo de espera se configuran en `application.properties`, sin tocar el código:
+
+```properties
+cs2.objetos-api.url=https://api.restful-api.dev
+cs2.objetos-api.timeout-ms=5000
+```
+
+| Pedido | Respuesta |
+|---|---|
+| `GET /api/objetos-externos` | 200 con los objetos de la API (`id`, `nombre`, `datos`) |
+| `GET /api/objetos-externos?nombre=apple` | 200 solo con los que contienen «apple» |
+| `GET /api/objetos-externos/7` | 200 con un objeto |
+| `GET /api/objetos-externos/999999` | 404 `ObjetoExternoNoEncontradoException` |
+| Cualquiera, con la API caída o sin internet | 502 `ServicioExternoNoDisponibleException` |
+
+WebClient es reactivo y devuelve `Mono` o `Flux`. Como esta aplicación es Spring MVC, el cliente espera cada respuesta con `block()`, con el tiempo máximo configurado. `ObjetosApiClientTest` lo prueba con respuestas simuladas, sin salir a internet.
+
+---
+
+## 📘 OpenAPI y Swagger UI
+
+Con **springdoc-openapi** la app publica la descripción de **todos** sus endpoints REST:
+
+* **Documento OpenAPI 3 (JSON):** `http://localhost:8080/v3/api-docs`. Es el que importa Insomnia o un compañero.
+* **Swagger UI:** `http://localhost:8080/swagger-ui.html`. Es una página para leer la API y probar cada endpoint con *Try it out*.
+
+Cada controller tiene un `@Tag` (grupo) y cada endpoint un `@Operation` (qué hace) y sus `@ApiResponse`, con el código y la excepción de cada error. Los cuerpos JSON (`ArmaRequest`, `JugadorRequest`, `ExplosionRequest`, `ErrorResponse`) tienen `@Schema` con la descripción y un ejemplo de cada campo. Así, alguien que no vio el código puede invocar el CRUD, la simulación y provocar los errores de las dos reglas. El título y la descripción general están en `config/OpenApiConfig`.
+
+---
+
 ## 🚨 Jerarquía de excepciones
 
 Ningún error usa `IllegalArgumentException` ni excepciones genéricas: cada caso tiene su clase.
@@ -489,17 +541,20 @@ RuntimeException
     │   └── CantidadDisparosInvalidaException
     ├── RecursoNoEncontradoException (abstracta) ──── → 404
     │   ├── ArmaNoEncontradaException        ├── JugadorNoEncontradoException
-    │   └── TiendaNoEncontradaException      └── ElementoUINoEncontradoException
-    └── ReglaNegocioException (abstracta)
-        ├── ArmaDuplicadaException ─────────────────── 409
-        ├── JugadorDuplicadoException ──────────────── 409
-        ├── GranadaYaDetonadaException ─────────────── 409
-        ├── PrecioExcedidoException ────────────────── 400
-        ├── BandoInvalidoException ─────────────────── 400
-        ├── SkinNoPermitidaException ───────────────── 400
-        ├── CambioDeTipoException ──────────────────── 400
-        ├── ArmaNoExplosivaException ───────────────── 400
-        └── ArmaNoDisparaException ─────────────────── 400
+    │   ├── TiendaNoEncontradaException      ├── ElementoUINoEncontradoException
+    │   └── ObjetoExternoNoEncontradoException
+    ├── ReglaNegocioException (abstracta)
+    │   ├── ArmaDuplicadaException ─────────────────── 409
+    │   ├── JugadorDuplicadoException ──────────────── 409
+    │   ├── GranadaYaDetonadaException ─────────────── 409
+    │   ├── PrecioExcedidoException ────────────────── 400
+    │   ├── BandoInvalidoException ─────────────────── 400
+    │   ├── SkinNoPermitidaException ───────────────── 400
+    │   ├── CambioDeTipoException ──────────────────── 400
+    │   ├── ArmaNoExplosivaException ───────────────── 400
+    │   └── ArmaNoDisparaException ─────────────────── 400
+    └── ServicioExternoException (abstracta) ──────── APIs ajenas consumidas con WebClient
+        └── ServicioExternoNoDisponibleException ──── 502
 ```
 
 * El dominio y los services lanzan estas excepciones sin saber nada de HTTP.
@@ -542,6 +597,7 @@ La colección está versionada en `insomnia/cs2-armas-crud.json`. Cubre el CRUD,
 | 7. HUD - interfaz UICapable | `GET /api/hud`: armas y jugadores de la base a través del protocolo |
 | 8. Tienda, ráfaga y /ui | Caso feliz y errores de los endpoints de POO-06 y POO-07 |
 | 9. Eliminar (al final) | `DELETE` del arma 1 y el `GET` posterior que da 404 |
+| 10. API externa y OpenAPI | `GET /v3/api-docs`, Swagger UI y la consulta a restful-api.dev con WebClient (lista, filtro, por id y 404) |
 
 **Orden de ejecución:**
 
