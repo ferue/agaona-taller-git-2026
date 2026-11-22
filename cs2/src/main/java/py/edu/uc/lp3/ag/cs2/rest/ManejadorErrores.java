@@ -24,6 +24,7 @@ import py.edu.uc.lp3.ag.cs2.exception.validacion.VidaInvalidaException;
 import py.edu.uc.lp3.ag.cs2.exception.noencontrado.ArmaNoEncontradaException;
 import py.edu.uc.lp3.ag.cs2.exception.noencontrado.ElementoUINoEncontradoException;
 import py.edu.uc.lp3.ag.cs2.exception.noencontrado.JugadorNoEncontradoException;
+import py.edu.uc.lp3.ag.cs2.exception.noencontrado.ObjetoExternoNoEncontradoException;
 import py.edu.uc.lp3.ag.cs2.exception.noencontrado.TiendaNoEncontradaException;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.ArmaDuplicadaException;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.ArmaNoDisparaException;
@@ -34,6 +35,7 @@ import py.edu.uc.lp3.ag.cs2.exception.negocio.GranadaYaDetonadaException;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.JugadorDuplicadoException;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.PrecioExcedidoException;
 import py.edu.uc.lp3.ag.cs2.exception.negocio.SkinNoPermitidaException;
+import py.edu.uc.lp3.ag.cs2.exception.externo.ServicioExternoNoDisponibleException;
 import py.edu.uc.lp3.ag.cs2.rest.response.ErrorResponse;
 
 /**
@@ -135,6 +137,11 @@ public class ManejadorErrores {
         return responder(HttpStatus.NOT_FOUND, e);
     }
 
+    @ExceptionHandler(ObjetoExternoNoEncontradoException.class)
+    public ResponseEntity<ErrorResponse> objetoExternoNoEncontrado(ObjetoExternoNoEncontradoException e) {
+        return responder(HttpStatus.NOT_FOUND, e);
+    }
+
     @ExceptionHandler(TiendaNoEncontradaException.class)
     public ResponseEntity<ErrorResponse> tiendaNoEncontrada(TiendaNoEncontradaException e) {
         return responder(HttpStatus.NOT_FOUND, e);
@@ -185,6 +192,13 @@ public class ManejadorErrores {
     @ExceptionHandler(SkinNoPermitidaException.class)
     public ResponseEntity<ErrorResponse> skinNoPermitida(SkinNoPermitidaException e) {
         return responder(HttpStatus.BAD_REQUEST, e);
+    }
+
+    // ===== APIs externas consumidas con WebClient → 502 =====
+
+    @ExceptionHandler(ServicioExternoNoDisponibleException.class)
+    public ResponseEntity<ErrorResponse> servicioExternoNoDisponible(ServicioExternoNoDisponibleException e) {
+        return responder(HttpStatus.BAD_GATEWAY, e);
     }
 
     // ===== Excepciones de Spring por pedidos mal armados =====
