@@ -232,6 +232,6 @@ Después de la simulación, `JUGADORES.VIDA` y las posiciones de las armas muest
 | CRUD REST | `rest/controller/ArmaCrudController` |
 | Dos reglas y simulación persistida | `ExplosionService.danar(...)`, `ExplosionService.empujar(...)` sobre `GranadaHE`, `Jugador` y `Posicion`; `POST /api/explosiones` |
 | Jerarquía de excepciones y handler por tipo | `exception/`; `rest/ManejadorErrores` |
-| Colección de Insomnia | `insomnia/cs2-armas-crud.json` (63 pedidos, 10 carpetas) |
+| Colección de Insomnia | `insomnia/cs2-armas-crud.json` (65 pedidos, 10 carpetas) |
 | Diagrama, reglas, «Qué hay que pensar» | `README.md` |
 | Bitácora de IA | `BITACORA.md` |

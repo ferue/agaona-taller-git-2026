@@ -128,7 +128,7 @@ cs2/
     │       │   ├── ArmaController.java
     │       │   ├── ArmaCrudController.java   ← CRUD /api/armas
     │       │   ├── JugadorController.java    ← /api/jugadores
-    │       │   ├── ExplosionController.java  ← /api/explosiones
+    │       │   ├── ExplosionController.java  ← /api/explosiones y /api/explosiones/validar
     │       │   ├── HudController.java        ← /api/hud (usa la interfaz UICapable)
     │       │   ├── ObjetoExternoController.java ← /api/objetos-externos (WebClient)
     │       │   ├── TiendaController.java
@@ -212,7 +212,11 @@ mvnw.cmd test            # Windows
 .\mvnw.cmd spring-boot:run   # Windows (PowerShell necesita el .\ delante)
 ```
 
-El servidor queda disponible en `http://localhost:8080`.
+El servidor queda disponible en `http://localhost:8080`. El puerto se cambia sin tocar código (`server.port=${PORT:8080}`), por ejemplo si el grupo del POO-09 corre los tres servicios en la misma máquina:
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8082
+```
 
 ### Recorrido rápido (POO-08)
 
@@ -469,6 +473,7 @@ Con los valores estándar de la HE (radio 8 m, daño máximo 98, empuje máximo 
 | `GET /api/jugadores/{id}` | Obtiene un jugador | 200 · 404 |
 | `POST /api/jugadores` | Crea un jugador (`nombre`, `bando` T o CT, `x`, `y`, `z`; opcionales `vida` y `tieneChaleco`) | 201 · 400 · 409 |
 | `POST /api/explosiones` | Hace explotar una granada HE en un punto | 200 · 400 · 404 · 409 |
+| `POST /api/explosiones/validar` | **Valida sin detonar (POO-09):** aplica las dos reglas y responde qué pasaría, pero no detona la granada, no baja vidas ni mueve armas (`"simulacion": true`). Es la operación que consultan los compañeros | 200 · 400 · 404 · 409 |
 
 ### Ejemplo con el escenario de la carga inicial
 
@@ -493,6 +498,19 @@ curl -X POST http://localhost:8080/api/explosiones -H "Content-Type: application
 ```
 
 Halcón tiene chaleco (37 → 19), Lobo tenía 20 de vida y queda eliminado, y Cuervo (a 12 m) y la Tec-9 (a 20 m) están fuera del radio. Si se repite el pedido con la misma granada, la respuesta es `409 GranadaYaDetonadaException`.
+
+### Validar sin detonar (para los compañeros del POO-09)
+
+`POST /api/explosiones/validar` recibe el mismo cuerpo y aplica las **mismas dos reglas** con las mismas validaciones, pero **sin efectos**: la granada no se detona, las vidas no bajan y las armas no se mueven (transacción de solo lectura en `ExplosionService.validar`). La respuesta tiene la misma forma, con `"simulacion": true`, y `vidaRestante` muestra con cuánta vida *quedaría* cada jugador:
+
+```bash
+curl -X POST http://localhost:8080/api/explosiones/validar -H "Content-Type: application/json" \
+     -d '{"granadaId":6,"x":0,"y":0,"z":0}'
+# 200 {"granadaId":6, ..., "simulacion":true,
+#      "resumen":"Validación sin detonar: HE Grenade dañaría a 3 jugador(es) (1 eliminado(s)) y desplazaría 2 arma(s). No se guardó nada.", ...}
+```
+
+Así un compañero puede consultar la regla todas las veces que quiera. Rechaza igual que la explosión real: **409** si la granada ya explotó, **400** si el id no es una HE o falta un dato, **404** si no existe.
 
 ---
 
@@ -627,8 +645,8 @@ La colección está versionada en `insomnia/cs2-armas-crud.json`. Cubre el CRUD,
 | 2. Armas - errores | Un POST ilegal por cada validación e invariante, JSON mal formado, id inexistente y, al final, **contar armas**: siguen siendo 14, ningún POST ilegal dejó basura |
 | 3. Jugadores | Listar, obtener y crear |
 | 4. Jugadores - errores | Vida fuera de rango, bando inválido, nombre duplicado, sin posición e id inexistente |
-| 5. Explosión (simulación) | Explotar la HE de ejemplo y ver con `GET` cómo quedaron jugadores y armas |
-| 6. Explosión - errores | Granada ya detonada, arma que no explota, granada inexistente y datos faltantes |
+| 5. Explosión (simulación) | Validar sin detonar (`/api/explosiones/validar`), explotar la HE de ejemplo y ver con `GET` cómo quedaron jugadores y armas |
+| 6. Explosión - errores | Granada ya detonada (al explotar y al validar), arma que no explota, granada inexistente y datos faltantes |
 | 7. HUD - interfaz UICapable | `GET /api/hud`: armas y jugadores de la base a través del protocolo |
 | 8. Tienda, ráfaga y /ui | Caso feliz y errores de los endpoints de POO-06 y POO-07 |
 | 9. Eliminar (al final) | `DELETE` del arma 1 y el `GET` posterior que da 404 |

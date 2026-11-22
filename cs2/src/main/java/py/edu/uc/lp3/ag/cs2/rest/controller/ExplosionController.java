@@ -46,4 +46,24 @@ public class ExplosionController {
         return ExplosionResponse.de(
                 explosionService.explotar(request.granadaId(), request.centro()));
     }
+
+    @Operation(summary = "Validar una explosión sin detonar (POO-09)",
+            description = "Aplica las mismas dos reglas que POST /api/explosiones, pero sin efectos: la granada no se detona, "
+                    + "las vidas no bajan y las armas no se mueven. Responde qué pasaría (simulacion = true). "
+                    + "Es la operación que consultan los compañeros: rechaza con 409 si la granada ya explotó, "
+                    + "400 si el id no es una HE o falta un dato, y 404 si no existe.")
+    @ApiResponses({
+        @ApiResponse(responseCode = "200", description = "La explosión es válida: a quién dañaría y qué armas empujaría (no se guardó nada)"),
+        @ApiResponse(responseCode = "400", description = "ArmaNoExplosivaException (el id no es una granada HE), CampoObligatorioException (falta granadaId, x, y o z) o CoordenadaInvalidaException",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "404", description = "ArmaNoEncontradaException: no hay un arma con ese id",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class))),
+        @ApiResponse(responseCode = "409", description = "GranadaYaDetonadaException: la granada ya explotó",
+                content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/validar")
+    public ExplosionResponse validar(@RequestBody ExplosionRequest request) {
+        return ExplosionResponse.de(
+                explosionService.validar(request.granadaId(), request.centro()));
+    }
 }

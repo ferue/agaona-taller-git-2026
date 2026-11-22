@@ -36,6 +36,10 @@ import java.util.Optional;
  * Las dos fórmulas bajan en línea recta con la distancia: en el centro valen
  * el máximo y en el borde del radio valen 0.
  *
+ * validar(...) aplica las mismas reglas sin efectos: no detona la granada,
+ * no baja vidas ni mueve armas (transacción de solo lectura). Es la
+ * operación que consultan los compañeros en el POO-09.
+ *
  * La granada se consume: si ya explotó → GranadaYaDetonadaException (409).
  * Si el id no existe → ArmaNoEncontradaException (404); si existe pero no es
  * una HE → ArmaNoExplosivaException (400).
@@ -56,12 +60,8 @@ public class ExplosionService {
     }
 
     public ResultadoExplosion explotar(Long granadaId, Posicion centro) {
-        if (granadaId == null) {
-            throw new CampoObligatorioException("granadaId");
-        }
-        Validaciones.requerirPosicion(centro, "centro");
-        GranadaHE granada = buscarGranada(granadaId);
-        detonar(granada);
+        GranadaHE granada = prepararExplosion(granadaId, centro);
+        granada.marcarDetonada();
 
         List<ResultadoExplosion.Impacto> impactos = new ArrayList<>();
         for (Jugador jugador : jugadorRepository.findAll(Sort.by("id"))) {
@@ -71,7 +71,41 @@ public class ExplosionService {
         for (Arma arma : armaRepository.findAll(Sort.by("id"))) {
             empujar(granada, arma, centro).ifPresent(desplazamientos::add);
         }
-        return new ResultadoExplosion(granada, centro, impactos, desplazamientos);
+        return new ResultadoExplosion(granada, centro, impactos, desplazamientos, false);
+    }
+
+    /**
+     * Mismas validaciones y mismas reglas que explotar(...), pero sin efectos:
+     * calcula a quién dañaría y qué armas empujaría, sin detonar la granada
+     * ni tocar vidas o posiciones.
+     */
+    @Transactional(readOnly = true)
+    public ResultadoExplosion validar(Long granadaId, Posicion centro) {
+        GranadaHE granada = prepararExplosion(granadaId, centro);
+
+        List<ResultadoExplosion.Impacto> impactos = new ArrayList<>();
+        for (Jugador jugador : jugadorRepository.findAll(Sort.by("id"))) {
+            calcularImpacto(granada, jugador, centro).ifPresent(impactos::add);
+        }
+        List<ResultadoExplosion.Desplazamiento> desplazamientos = new ArrayList<>();
+        for (Arma arma : armaRepository.findAll(Sort.by("id"))) {
+            calcularDesplazamiento(granada, arma, centro).ifPresent(desplazamientos::add);
+        }
+        return new ResultadoExplosion(granada, centro, impactos, desplazamientos, true);
+    }
+
+    /** Lo común a explotar y validar: datos obligatorios, granada HE y que no haya explotado. */
+    private GranadaHE prepararExplosion(Long granadaId, Posicion centro) {
+        if (granadaId == null) {
+            throw new CampoObligatorioException("granadaId");
+        }
+        Validaciones.requerirPosicion(centro, "centro");
+        GranadaHE granada = buscarGranada(granadaId);
+        // La granada se consume: explota una sola vez.
+        if (granada.isDetonada()) {
+            throw new GranadaYaDetonadaException(granada.getNombre());
+        }
+        return granada;
     }
 
     private GranadaHE buscarGranada(Long id) {
@@ -84,14 +118,6 @@ public class ExplosionService {
         return granada;
     }
 
-    /** La granada se consume: explota una sola vez. */
-    private void detonar(GranadaHE granada) {
-        if (granada.isDetonada()) {
-            throw new GranadaYaDetonadaException(granada.getNombre());
-        }
-        granada.marcarDetonada();
-    }
-
     // ===== Regla 1: daño =====
 
     /**
@@ -99,6 +125,13 @@ public class ExplosionService {
      * corresponde a su distancia. Devuelve el impacto, o vacío si no lo alcanzó.
      */
     Optional<ResultadoExplosion.Impacto> danar(GranadaHE granada, Jugador jugador, Posicion centro) {
+        Optional<ResultadoExplosion.Impacto> impacto = calcularImpacto(granada, jugador, centro);
+        impacto.ifPresent(i -> jugador.perderVida(i.danoRecibido()));
+        return impacto;
+    }
+
+    /** Regla 1 sin efectos: qué daño recibiría el jugador y con cuánta vida quedaría. */
+    Optional<ResultadoExplosion.Impacto> calcularImpacto(GranadaHE granada, Jugador jugador, Posicion centro) {
         if (!jugador.estaVivo()) {
             return Optional.empty();
         }
@@ -108,8 +141,8 @@ public class ExplosionService {
         }
         int danoCalculado = calcularDano(granada, distancia);
         int danoRecibido = danoRecibido(jugador, danoCalculado);
-        jugador.perderVida(danoRecibido);
-        return Optional.of(new ResultadoExplosion.Impacto(jugador, distancia, danoCalculado, danoRecibido));
+        return Optional.of(new ResultadoExplosion.Impacto(jugador, distancia, danoCalculado, danoRecibido,
+                jugador.getVida() - danoRecibido));
     }
 
     /** daño = danoMaximo × (1 − distancia / radio), redondeado; 0 fuera del radio. */
@@ -134,6 +167,14 @@ public class ExplosionService {
      * Devuelve el desplazamiento, o vacío.
      */
     Optional<ResultadoExplosion.Desplazamiento> empujar(GranadaHE granada, Arma arma, Posicion centro) {
+        Optional<ResultadoExplosion.Desplazamiento> desplazamiento = calcularDesplazamiento(granada, arma, centro);
+        desplazamiento.ifPresent(d -> arma.ubicarEn(d.hasta()));
+        return desplazamiento;
+    }
+
+    /** Regla 2 sin efectos: a dónde volaría el arma y cuántos metros. */
+    Optional<ResultadoExplosion.Desplazamiento> calcularDesplazamiento(GranadaHE granada, Arma arma,
+                                                                      Posicion centro) {
         if (arma == granada || !arma.estaEnElMapa()) {
             return Optional.empty();
         }
@@ -143,9 +184,8 @@ public class ExplosionService {
             return Optional.empty();
         }
         double metros = calcularEmpuje(granada, distancia);
-        Posicion hasta = desplazarDesde(desde, centro, metros);
-        arma.ubicarEn(hasta);
-        return Optional.of(new ResultadoExplosion.Desplazamiento(arma, desde, hasta, metros));
+        return Optional.of(new ResultadoExplosion.Desplazamiento(arma, desde, desplazarDesde(desde, centro, metros),
+                metros));
     }
 
     /** metros = empujeMaximo × (1 − distancia / radio); 0 fuera del radio. */

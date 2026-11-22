@@ -113,4 +113,26 @@ class ExplosionServiceTest {
                 () -> explosionService.explotar(he.getId(), new Posicion(0, Double.NaN, 0)));
         assertFalse(he.isDetonada());   // los errores no gastan la granada
     }
+
+    @Test
+    @DisplayName("Validar aplica las dos reglas sin efectos: no detona, no baja vidas ni mueve armas")
+    void validarSinEfectos() {
+        ResultadoExplosion r = explosionService.validar(he.getId(), CENTRO);
+
+        assertTrue(r.simulacion());
+        assertEquals(3, r.jugadoresAfectados().size());
+        assertEquals(14, r.jugadoresAfectados().get(0).vidaRestante());   // lo que le quedaría a Fénix
+        assertEquals(0, r.jugadoresAfectados().get(2).vidaRestante());    // Lobo quedaría eliminado
+        assertEquals(new Posicion(6.5, 0, 0), r.armasDesplazadas().get(0).hasta());
+
+        assertFalse(he.isDetonada());
+        assertEquals(100, fenix.getVida());
+        assertEquals(20, lobo.getVida());
+        assertEquals(new Posicion(2, 0, 0), galil.getPosicion());
+
+        // Se puede validar varias veces y después explotar de verdad.
+        explosionService.validar(he.getId(), CENTRO);
+        assertFalse(explosionService.explotar(he.getId(), CENTRO).simulacion());
+        assertThrows(GranadaYaDetonadaException.class, () -> explosionService.validar(he.getId(), CENTRO));
+    }
 }

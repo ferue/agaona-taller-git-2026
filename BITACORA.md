@@ -211,3 +211,9 @@
 * `mvn test` sin conexión con las librerías de la notebook del alumno y JDK 21: **66 tests, 0 fallas, BUILD SUCCESS**.
 * App levantada con la base recién creada y los 63 pedidos de la colección ejecutados en orden: los 58 de las carpetas 1 a 9 y el de `/v3/api-docs` respondieron el código y el tipo de excepción esperados. Los 4 de `restful-api.dev` de la carpeta 10 dieron 502 solo porque el entorno de la IA no tiene salida a internet; en la notebook del alumno responden bien.
 * `POST` de la Desert Eagle con la base limpia → `201` con `"id":10`.
+
+16. **Regla consultable sin efectos (POO-09):**
+    * *Contexto:* según el enunciado y el ejemplo UNO del POO-09, cada compañero consume las **dos reglas** del otro leyendo su OpenAPI. Con `POST /api/explosiones` la granada se gastaba en la primera consulta.
+    * *Prompt:* «Dale» (a la propuesta de agregar una versión que solo pregunte).
+    * *Acción:* `ExplosionService.validar(...)` (transacción de solo lectura) aplica las mismas validaciones y reglas que `explotar(...)` sin detonar, bajar vidas ni mover armas; `POST /api/explosiones/validar` documentado en OpenAPI con sus 200, 400, 404 y 409; `server.port=${PORT:8080}`; test que comprueba que validar no cambia nada; dos pedidos en Insomnia (validar → 200 y validar la HE ya detonada → 409) y sección en el README. Se descartó un validador de «jugadas» con un contrato común, porque no usaba las reglas del POO-08.
+    * *Verificación:* **67 tests, 0 fallas**; colección ejecutada con la base limpia (carpetas 1 a 9 sin diferencias).

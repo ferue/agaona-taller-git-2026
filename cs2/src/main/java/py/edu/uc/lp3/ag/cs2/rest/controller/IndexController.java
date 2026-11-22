@@ -40,6 +40,7 @@ public class IndexController {
                 "GET    /api/jugadores/{id}   (obtener jugador)",
                 "POST   /api/jugadores        (crear jugador, cuerpo JSON)",
                 "POST   /api/explosiones      (explota una granada HE: {granadaId, x, y, z})",
+                "POST   /api/explosiones/validar (POO-09: aplica las dos reglas sin detonar ni guardar nada)",
                 "GET    /api/hud              (protocolo UICapable: armas y jugadores de la base)",
                 "GET    /api/objetos-externos      (consulta https://api.restful-api.dev con WebClient, opcional ?nombre=)",
                 "GET    /api/objetos-externos/{id} (un objeto de restful-api.dev)",

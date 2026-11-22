@@ -824,6 +824,28 @@
       "authentication": {}
     },
     {
+      "_id": "req_64",
+      "_type": "request",
+      "parentId": "fld_5",
+      "name": "Validar sin detonar (POO-09) → 200",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones/validar",
+      "description": "Respuesta esperada: 200 con simulacion = true. Aplica las dos reglas sin efectos: muestra que Fénix quedaría con 14, Halcón con 81 y Lobo ELIMINADO, y a dónde volarían la Galil AR y la P250, pero no detona la granada ni cambia nada. Es la operación que consultan los compañeros en el POO-09.",
+      "metaSortKey": 35.5,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"granadaId\": {{ _.granadaId }},\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
       "_id": "req_37",
       "_type": "request",
       "parentId": "fld_5",
@@ -882,6 +904,28 @@
       "url": "{{ _.base_url }}/api/explosiones",
       "description": "Respuesta esperada: 409 (la granada se consume)",
       "metaSortKey": 39,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"granadaId\": {{ _.granadaId }},\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_65",
+      "_type": "request",
+      "parentId": "fld_6",
+      "name": "Validar la HE ya detonada → 409 GranadaYaDetonadaException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones/validar",
+      "description": "Respuesta esperada: 409. Después de la explosión real, la validación también rechaza: así ve el rechazo un compañero que consulta esta regla.",
+      "metaSortKey": 39.5,
       "headers": [
         {
           "name": "Content-Type",
