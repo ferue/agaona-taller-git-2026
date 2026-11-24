@@ -1,0 +1,9 @@
+{
+  "_pedido": "POST http://localhost:8080/api/jugadas  {\"granadaId\":<HE sin detonar>,\"x\":0,\"y\":0,\"z\":0}",
+  "_fecha": "2026-11-22T19:54 (respuesta real: el servicio de A2 respondió 500 mientras lo modificaban)",
+  "_status": "502 Bad Gateway",
+  "status": 502,
+  "error": "Bad Gateway",
+  "tipo": "A2NoDisponibleException",
+  "mensaje": "El servicio externo 'A2 (Mauricio Pecci)' no está disponible: POST /api/armas/1/disparar respondió HTTP 500"
+}

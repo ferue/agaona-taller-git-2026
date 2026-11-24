@@ -9,7 +9,7 @@
       "_type": "workspace",
       "parentId": null,
       "name": "CS2 - CRUD de Armas (LP3 CYT646)",
-      "description": "POO-08 – CRUD de Arma persistido en H2, simulación de explosión con granada HE (GranadaHE, Jugador, Posicion), endpoint del protocolo UICapable y un pedido por cada excepción. Correr las carpetas en orden con la base recién creada (borrar cs2/data). Carpeta 10: OpenAPI y consulta a restful-api.dev con WebClient.",
+      "description": "POO-08 – CRUD de Arma persistido en H2, simulación de explosión con granada HE (GranadaHE, Jugador, Posicion), endpoint del protocolo UICapable y un pedido por cada excepción. Correr las carpetas en orden con la base recién creada (borrar cs2/data). Carpeta 10: OpenAPI y consulta a restful-api.dev con WebClient. Carpeta 11: POO-09 (escenario «ataque coordinado» con A2 Mauricio y A3 Vanessa); las respuestas reales están en insomnia/respuestas-poo09/.",
       "scope": "collection"
     },
     {
@@ -21,7 +21,11 @@
         "base_url": "http://localhost:8080",
         "id": "1",
         "jugadorId": "1",
-        "granadaId": "6"
+        "granadaId": "6",
+        "base_a2": "https://desktop-hrm8vjo.tailde75e4.ts.net",
+        "base_a3": "http://100.95.213.93:8081",
+        "granadaEscenario": "15",
+        "granadaRechazos": "16"
       },
       "isPrivate": false
     },
@@ -1288,6 +1292,332 @@
       "url": "{{ _.base_url }}/api/objetos-externos/999999",
       "description": "Respuesta esperada: 404 (502 ServicioExternoNoDisponibleException si no hay internet)",
       "metaSortKey": 4,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "fld_11",
+      "_type": "request_group",
+      "parentId": "wrk_cs2_crud",
+      "name": "11. POO-09 - escenario con A2 y A3",
+      "description": "Escenario «ataque coordinado». Antes: A2 (Mauricio) y A3 (Vanessa) arriba; variables base_a2 y base_a3 del entorno con las URLs donde estén corriendo (Tailscale o red local, p. ej. http://10.30.13.183:8081). Su orden: OpenAPI de los tres, preparar A2 (su H2 es en memoria: si Mauricio reinicia, hay que volver a crear sus armas 1 y 2), crear las HE, camino feliz, rechazos. IMPORTANTE: los ids de las HE dependen de la base. Después de «Crear la HE del escenario» y «Crear la HE para los rechazos», copiá el id que devolvió cada una en las variables granadaEscenario y granadaRechazos (con la base limpia y las carpetas 1 a 10 corridas son 15 y 16). Respuestas reales guardadas en insomnia/respuestas-poo09/ (22/11 por Tailscale y 23/11 por la red de la facultad).",
+      "metaSortKey": 10
+    },
+    {
+      "_id": "req_66",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "OpenAPI propio (A1)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/v3/api-docs",
+      "description": "Respuesta esperada: 200 con el documento OpenAPI 3 de A1 (servidores \"/\" y el link del funnel).",
+      "metaSortKey": 66,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_67",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "OpenAPI de A2 (Mauricio)",
+      "method": "GET",
+      "url": "{{ _.base_a2 }}/v3/api-docs",
+      "description": "Respuesta esperada: 200. De acá sale la regla de disparo de A2: POST /api/armas/{id}/disparar con {objetivoId, distancia, critico}.",
+      "metaSortKey": 67,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_68",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "OpenAPI de A3 (Vanessa)",
+      "method": "GET",
+      "url": "{{ _.base_a3 }}/v3/api-docs",
+      "description": "Respuesta esperada: 200. De acá sale la regla 1 de A3: POST /api/armas/{id}/disparar?distancia=10 (409 si el arma no puede dispararse).",
+      "metaSortKey": 68,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_69",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "Preparar A2: crear el arma 1 (AK-47 con munición)",
+      "method": "POST",
+      "url": "{{ _.base_a2 }}/api/armas",
+      "description": "Respuesta esperada: 201. Solo hace falta si el servicio de A2 recién arrancó: su H2 es en memoria y arranca vacía. Es el arma que dispara (cs2.a2.arma-id=1).",
+      "metaSortKey": 69,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipoArma\": \"FUSIL\",\n  \"nombre\": \"AK-47\",\n  \"precio\": 2700,\n  \"durabilidad\": 100,\n  \"dano\": 36,\n  \"precision\": 71,\n  \"recarga\": 2.4,\n  \"velocidad\": 600,\n  \"municionActual\": 30,\n  \"municionMaxima\": 30,\n  \"automatica\": true,\n  \"mira\": 2,\n  \"retroceso\": 3,\n  \"silenciador\": false\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_70",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "Preparar A2: crear el arma 2 (objetivo)",
+      "method": "POST",
+      "url": "{{ _.base_a2 }}/api/armas",
+      "description": "Respuesta esperada: 201. Objetivo del disparo en A2 (cs2.a2.objetivo-id=2).",
+      "metaSortKey": 70,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipoArma\": \"PISTOLA\",\n  \"nombre\": \"Glock-18\",\n  \"precio\": 200,\n  \"durabilidad\": 100,\n  \"dano\": 30,\n  \"precision\": 60,\n  \"recarga\": 2.2,\n  \"velocidad\": 400,\n  \"municionActual\": 20,\n  \"municionMaxima\": 20,\n  \"automatica\": false,\n  \"silenciador\": false\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_71",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "Ver las armas de A3",
+      "method": "GET",
+      "url": "{{ _.base_a3 }}/api/armas",
+      "description": "Respuesta esperada: 200. El id 4 es \"AK-47 lleno\" (acepta el disparo) y el 3 es \"AK-47 vacio\" (lo rechaza con 409).",
+      "metaSortKey": 71,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_72",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "Crear la HE del escenario",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 201. Copiá el id de la respuesta en la variable granadaEscenario (con la base limpia y las carpetas 1 a 10 corridas es 15).",
+      "metaSortKey": 72,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"granada-he\",\n  \"nombre\": \"HE Escenario\",\n  \"precio\": 300,\n  \"bando\": \"CT/T\"\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_73",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "Validar las reglas propias sin detonar",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/explosiones/validar",
+      "description": "Respuesta esperada: 200 con simulacion = true. Es el paso 1 del escenario: no cambia nada.",
+      "metaSortKey": 73,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"granadaId\": {{ _.granadaEscenario }},\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_74",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "Ataque coordinado: camino feliz → 201",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadas",
+      "description": "Respuesta esperada: 201 + Location. A2 y A3 aceptan, explota la HE y se guarda la jugada.\n\nRespuesta real (22/11, 19:34): {\"id\":1,\"granadaId\":15,\"granada\":\"HE Escenario\",\"resultadoA2\":\"A2 (Mauricio Pecci): pistola le disparó a Pi: 1 de daño, quedan 9 balas\",\"resultadoA3\":\"A3 (Vanessa Ricciardi): AK-47 lleno disparó: 34 de daño, Impacto de bala a 10.0 m (estado 29/90)\",\"jugadoresDanados\":3,\"jugadoresEliminados\":1,\"armasDesplazadas\":3, ...}\nArchivo: insomnia/respuestas-poo09/1-camino-feliz-201.json",
+      "metaSortKey": 74,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"granadaId\": {{ _.granadaEscenario }},\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_75",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "Ver las jugadas guardadas",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/jugadas",
+      "description": "Respuesta esperada: 200 con la jugada recién guardada.",
+      "metaSortKey": 75,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_76",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "Crear la HE para los rechazos",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/armas",
+      "description": "Respuesta esperada: 201. Copiá el id de la respuesta en la variable granadaRechazos (con la base limpia es 16). Los rechazos no la detonan, así que sirve para todos.",
+      "metaSortKey": 76,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"tipo\": \"granada-he\",\n  \"nombre\": \"HE Rechazos\",\n  \"precio\": 300,\n  \"bando\": \"CT/T\"\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_77",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "Rechazo de A3 (arma 999, no existe) → 409 RechazoA3Exception",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadas",
+      "description": "Respuesta esperada: 409. A2 acepta, A3 responde 404 (no tiene el arma 999) y la base de A1 queda igual. Funciona siempre, tenga o no A3 un arma vacía.\n\nRespuesta real (23/11, 17:28, red de la facultad): {\"status\":409,\"error\":\"Conflict\",\"tipo\":\"RechazoA3Exception\",\"mensaje\":\"A3 (Vanessa Ricciardi) rechazó la jugada con HTTP 404: RecursoNoEncontradoException: No existe un arma con id 999. No se guardó nada.\"}\nArchivo: insomnia/respuestas-poo09/8-rechazo-A3-999-409.json",
+      "metaSortKey": 77,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"granadaId\": {{ _.granadaRechazos }},\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0,\n  \"armaA3Id\": 999\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_82",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "Rechazo de A3 por regla (cargador vacío) → 409 RechazoA3Exception",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadas",
+      "description": "Rechazo por la regla de negocio de A3: solo da 409 si el arma armaA3Id de Vanessa tiene el cargador vacío (en su carga inicial es la 3, «AK-47 vacio»). Si esa arma tiene balas, A3 acepta y la jugada se guarda (201): en ese caso usá el pedido anterior (arma 999).\n\nRespuesta real (22/11, 19:36): {\"status\":409,\"error\":\"Conflict\",\"tipo\":\"RechazoA3Exception\",\"mensaje\":\"A3 (Vanessa Ricciardi) rechazó la jugada con HTTP 409: CargadorVacioException: Cargador vacío: hay que recargar. No se guardó nada.\"}\nArchivo: insomnia/respuestas-poo09/2-rechazo-A3-409.json",
+      "metaSortKey": 77.5,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"granadaId\": {{ _.granadaRechazos }},\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0,\n  \"armaA3Id\": 3\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_78",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "Rechazo de A2 (arma 999) → 409 RechazoA2Exception",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadas",
+      "description": "Respuesta esperada: 409. A2 rechaza (404 de su lado), A3 no se consulta y la base de A1 queda igual.\n\nRespuesta real (22/11, 19:37): {\"status\":409,\"error\":\"Conflict\",\"tipo\":\"RechazoA2Exception\",\"mensaje\":\"A2 (Mauricio Pecci) rechazó la jugada con HTTP 404: ARMA_NO_ENCONTRADA: Arma no encontrada con id: 999 (el recurso solicitado no existe). No se guardó nada.\"}\nArchivo: insomnia/respuestas-poo09/3-rechazo-A2-409.json",
+      "metaSortKey": 78,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"granadaId\": {{ _.granadaRechazos }},\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0,\n  \"armaA2Id\": 999\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_79",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "Granada del escenario ya usada → 409 GranadaYaDetonadaException",
+      "method": "POST",
+      "url": "{{ _.base_url }}/api/jugadas",
+      "description": "Respuesta esperada: 409. Se corta en las reglas propias, sin consultar a A2 ni a A3.",
+      "metaSortKey": 79,
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "mimeType": "application/json",
+        "text": "{\n  \"granadaId\": {{ _.granadaEscenario }},\n  \"x\": 0,\n  \"y\": 0,\n  \"z\": 0\n}"
+      },
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_80",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "Ver las jugadas (siguen igual)",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/jugadas",
+      "description": "Respuesta esperada: 200 con una sola jugada: los rechazos no guardaron nada.\nArchivo: insomnia/respuestas-poo09/6-listar-jugadas-200.json",
+      "metaSortKey": 80,
+      "headers": [],
+      "body": {},
+      "parameters": [],
+      "authentication": {}
+    },
+    {
+      "_id": "req_81",
+      "_type": "request",
+      "parentId": "fld_11",
+      "name": "Jugada inexistente → 404 JugadaNoEncontradaException",
+      "method": "GET",
+      "url": "{{ _.base_url }}/api/jugadas/9999",
+      "description": "Respuesta esperada: 404.\n\nSi A2 o A3 no responden, el escenario da 502 A2NoDisponibleException o A3NoDisponibleException (respuesta real en insomnia/respuestas-poo09/4-A2-no-disponible-502.json).",
+      "metaSortKey": 81,
       "headers": [],
       "body": {},
       "parameters": [],

@@ -1,0 +1,9 @@
+{
+  "_pedido": "POST http://localhost:8080/api/jugadas  {\"granadaId\":19,\"x\":0,\"y\":0,\"z\":0,\"armaA2Id\":999,\"armaA3Id\":4}",
+  "_fecha": "2026-11-23T17:28 (respuesta real: A2 no tiene un arma con id 999, A2 y A3 por la red de la facultad: A2 http://10.30.13.183:8081, A3 http://10.30.14.22:8081)",
+  "_status": "409 Conflict",
+  "status": 409,
+  "error": "Conflict",
+  "tipo": "RechazoA2Exception",
+  "mensaje": "A2 (Mauricio Pecci) rechazó la jugada con HTTP 404: ARMA_NO_ENCONTRADA: Arma no encontrada con id: 999 (el recurso solicitado no existe). No se guardó nada."
+}

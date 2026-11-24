@@ -1,0 +1,9 @@
+{
+  "_pedido": "POST http://localhost:8080/api/jugadas  {\"granadaId\":19,\"x\":0,\"y\":0,\"z\":0,\"armaA2Id\":1,\"objetivoA2Id\":2,\"armaA3Id\":999}",
+  "_fecha": "2026-11-23T17:28 (respuesta real: A3 no tiene un arma con id 999, A2 y A3 por la red de la facultad: A2 http://10.30.13.183:8081, A3 http://10.30.14.22:8081)",
+  "_status": "409 Conflict",
+  "status": 409,
+  "error": "Conflict",
+  "tipo": "RechazoA3Exception",
+  "mensaje": "A3 (Vanessa Ricciardi) rechazó la jugada con HTTP 404: RecursoNoEncontradoException: No existe un arma con id 999. No se guardó nada."
+}

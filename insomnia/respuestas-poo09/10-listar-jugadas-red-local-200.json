@@ -1,0 +1,58 @@
+{
+  "_pedido": "GET http://localhost:8080/api/jugadas  (después del feliz y de los dos rechazos del 23/11)",
+  "_fecha": "2026-11-23T17:28 (respuesta real: antes había 2 jugadas y quedaron 3; los rechazos no guardaron nada)",
+  "_status": "200 OK",
+  "respuesta": [
+    {
+      "id": 1,
+      "fecha": "2026-11-23T16:56:30.77513",
+      "granadaId": 15,
+      "granada": "HE Escenario",
+      "centro": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "resultadoA2": "A2 (Mauricio Pecci): AK-47 A2 atacante le disparó a fusil: 10 de daño (objetivo destruido), quedan 29 balas",
+      "resultadoA3": "A3 (Vanessa Ricciardi): AK-47 lleno disparó: 34 de daño, Disparo a 10.0 m (28/90) (estado 28/90)",
+      "jugadoresDanados": 3,
+      "jugadoresEliminados": 1,
+      "armasDesplazadas": 3,
+      "resumen": "Ataque coordinado: A2 y A3 aceptaron y HE Escenario dañó a 3 jugador(es) (1 eliminado(s)) y desplazó 3 arma(s)."
+    },
+    {
+      "id": 2,
+      "fecha": "2026-11-23T17:21:32.115965",
+      "granadaId": 17,
+      "granada": "HE Rechazos",
+      "centro": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "resultadoA2": "A2 (Mauricio Pecci): AK-47 le disparó a Glock-18: 36 de daño, quedan 29 balas",
+      "resultadoA3": "A3 (Vanessa Ricciardi): AK-47 disparó: 34 de daño, Disparo a 10.0 m (4/15) (estado 4/15)",
+      "jugadoresDanados": 2,
+      "jugadoresEliminados": 0,
+      "armasDesplazadas": 3,
+      "resumen": "Ataque coordinado: A2 y A3 aceptaron y HE Rechazos dañó a 2 jugador(es) (0 eliminado(s)) y desplazó 3 arma(s)."
+    },
+    {
+      "id": 3,
+      "fecha": "2026-11-23T17:28:38.629453",
+      "granadaId": 18,
+      "granada": "HE Feliz 20261123-172837",
+      "centro": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0
+      },
+      "resultadoA2": "A2 (Mauricio Pecci): AK-47 le disparó a Glock-18: 36 de daño, quedan 28 balas",
+      "resultadoA3": "A3 (Vanessa Ricciardi): AK-47 disparó: 34 de daño, Disparo a 10.0 m (4/15) (estado 4/15)",
+      "jugadoresDanados": 2,
+      "jugadoresEliminados": 0,
+      "armasDesplazadas": 3,
+      "resumen": "Ataque coordinado: A2 y A3 aceptaron y HE Feliz 20261123-172837 dañó a 2 jugador(es) (0 eliminado(s)) y desplazó 3 arma(s)."
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "_pedido": "POST http://localhost:8080/api/jugadas  {\"granadaId\":<HE sin detonar>,\"x\":0,\"y\":0,\"z\":0,\"armaA3Id\":3}",
+  "_fecha": "2026-11-22T19:36 (respuesta real: el id 3 de A3 es el \"AK-47 vacio\")",
+  "_status": "409 Conflict",
+  "status": 409,
+  "error": "Conflict",
+  "tipo": "RechazoA3Exception",
+  "mensaje": "A3 (Vanessa Ricciardi) rechazó la jugada con HTTP 409: CargadorVacioException: Cargador vacío: hay que recargar. No se guardó nada."
+}

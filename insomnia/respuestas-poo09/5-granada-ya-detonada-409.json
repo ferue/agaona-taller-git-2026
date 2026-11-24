@@ -1,0 +1,9 @@
+{
+  "_pedido": "POST http://localhost:8080/api/jugadas  {\"granadaId\":6,\"x\":0,\"y\":0,\"z\":0}",
+  "_fecha": "2026-11-22T19:31 (respuesta real: la HE 6 ya había explotado; se corta antes de consultar a A2 y A3)",
+  "_status": "409 Conflict",
+  "status": 409,
+  "error": "Conflict",
+  "tipo": "GranadaYaDetonadaException",
+  "mensaje": "La granada 'HE Grenade' ya fue detonada y no se puede volver a usar"
+}

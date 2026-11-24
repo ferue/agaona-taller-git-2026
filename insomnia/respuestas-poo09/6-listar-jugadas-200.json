@@ -1,0 +1,20 @@
+{
+  "_pedido": "GET http://localhost:8080/api/jugadas  (después del feliz y de los dos rechazos)",
+  "_fecha": "2026-11-22T19:37 (respuesta real: sigue habiendo una sola jugada, los rechazos no guardaron nada)",
+  "_status": "200 OK",
+  "respuesta": [
+    {
+      "id": 1,
+      "fecha": "2026-11-22T19:34:20.372252",
+      "granadaId": 15,
+      "granada": "HE Escenario",
+      "centro": {"x": 0.0, "y": 0.0, "z": 0.0},
+      "resultadoA2": "A2 (Mauricio Pecci): pistola le disparó a Pi: 1 de daño, quedan 9 balas",
+      "resultadoA3": "A3 (Vanessa Ricciardi): AK-47 lleno disparó: 34 de daño, Impacto de bala a 10.0 m (estado 29/90)",
+      "jugadoresDanados": 3,
+      "jugadoresEliminados": 1,
+      "armasDesplazadas": 3,
+      "resumen": "Ataque coordinado: A2 y A3 aceptaron y HE Escenario dañó a 3 jugador(es) (1 eliminado(s)) y desplazó 3 arma(s)."
+    }
+  ]
+}
