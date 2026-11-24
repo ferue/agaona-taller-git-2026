@@ -14,6 +14,10 @@ Este commit tiene la solución completa del POO-08: el código, los tests, la co
 
 Las especificaciones aplicadas a este dominio están en [`docs/especificaciones-poo-08.md`](docs/especificaciones-poo-08.md).
 
+### 🤝 POO-09 — APIs cruzadas
+
+Trío de CS2: **A1 Ariel Gaona** (este servicio), **A2 Mauricio Pecci** y **A3 Vanessa Ricciardi**. Escenario «ataque coordinado» en `POST /api/jugadas`: se guarda solo si las reglas de disparo de A2 y de A3 aceptan. Mapa, diagramas, resultados reales y cómo arrancar los tres servicios en [POO-09 — APIs cruzadas](#-poo-09--apis-cruzadas-ataque-coordinado).
+
 ### ✅ Situación del POO-08 (observaciones de la corrección cerradas)
 
 La corrección del POO-08 (22,5 / 24) dejó tres observaciones. Las tres quedaron cerradas en la rama `feature/RESTApi`:
@@ -93,22 +97,27 @@ cs2/
     │   │   ├── Jugador.java             ← jugador con vida, chaleco y posición
     │   │   ├── Posicion.java            ← punto x, y, z (@Embeddable)
     │   │   ├── Tienda.java
-    │   │   └── ResultadoCompra.java
+    │   │   ├── ResultadoCompra.java
+    │   │   └── JugadaAtaque.java        ← jugada guardada del escenario del POO-09
     │   ├── exception/                   ← jerarquía de excepciones
     │   │   ├── Cs2Exception.java        ← raíz
     │   │   ├── validacion/              ← DatoInvalidoException y 13 hijas (400)
     │   │   ├── noencontrado/            ← RecursoNoEncontradoException y 5 hijas (404)
     │   │   ├── negocio/                 ← ReglaNegocioException y 9 hijas (400 / 409)
-    │   │   └── externo/                 ← ServicioExternoException y 1 hija (502)
+    │   │   └── externo/                 ← ServicioExternoException: rechazos de A2/A3 (409) y no disponible (502)
     │   ├── client/                      ← clientes HTTP hacia APIs ajenas (WebClient)
     │   │   ├── ObjetosApiClient.java    ← consulta https://api.restful-api.dev
-    │   │   └── ObjetoExternoDto.java
+    │   │   ├── ObjetoExternoDto.java
+    │   │   ├── CompaneroClient.java     ← base de los clientes del POO-09 (códigos, timeout, log DEBUG)
+    │   │   ├── A2ArmasClient.java       ← disparo en la API de Mauricio (A2)
+    │   │   └── A3ArmasClient.java       ← disparo en la API de Vanessa (A3)
     │   ├── config/
     │   │   ├── CargaInicialArmas.java   ← catálogo y escenario de explosión de ejemplo
     │   │   └── OpenApiConfig.java       ← título y descripción del documento OpenAPI
     │   ├── repository/                  ← capa de datos (interfaces)
     │   │   ├── ArmaRepository.java
-    │   │   └── JugadorRepository.java
+    │   │   ├── JugadorRepository.java
+    │   │   └── JugadaAtaqueRepository.java ← jugadas del escenario del POO-09
     │   ├── service/                     ← capa de negocio: validaciones, reglas y excepciones
     │   │   ├── HudService.java          ← junta armas y jugadores como UICapable
     │   │   ├── ObjetoExternoService.java ← usa el cliente WebClient (filtro y 404)
@@ -119,6 +128,7 @@ cs2/
     │   │   ├── DemostracionArmasService.java ← /api/armas/probar, /rafaga y /polimorfismo
     │   │   ├── TiendaService.java       ← tiendas en memoria y regla de compra
     │   │   ├── UIService.java           ← catálogo de /ui/{nombre}
+    │   │   ├── JugadaService.java       ← escenario del POO-09: reglas propias, A2, A3 y guardar
     │   │   ├── Validaciones.java        ← texto obligatorio y coordenadas finitas
     │   │   └── FabricaArmas.java        ← crea armas a partir del "tipo"
     │   └── rest/                        ← capa web
@@ -131,6 +141,7 @@ cs2/
     │       │   ├── ExplosionController.java  ← /api/explosiones y /api/explosiones/validar
     │       │   ├── HudController.java        ← /api/hud (usa la interfaz UICapable)
     │       │   ├── ObjetoExternoController.java ← /api/objetos-externos (WebClient)
+    │       │   ├── JugadaController.java     ← /api/jugadas (escenario del POO-09)
     │       │   ├── TiendaController.java
     │       │   └── UIController.java
     │       ├── request/
@@ -160,12 +171,14 @@ cs2/
         │   ├── GranadaHETest.java
         │   └── JugadorTest.java
         ├── client/
-        │   └── ObjetosApiClientTest.java     ← WebClient con respuestas simuladas, sin internet
+        │   ├── ObjetosApiClientTest.java     ← WebClient con respuestas simuladas, sin internet
+        │   └── CompanerosClientTest.java     ← clientes de A2 y A3: acepta, rechaza, caído, sin respuesta
         ├── service/
         │   ├── ArmaServiceTest.java          ← reglas del catálogo e invariantes
         │   ├── JugadorServiceTest.java
         │   ├── ExplosionServiceTest.java     ← simulación completa contra H2
         │   ├── ReglasExplosionTest.java      ← fórmulas, chaleco y geometría, sin base
+        │   ├── JugadaServiceTest.java        ← escenario del POO-09 con A2 y A3 simulados por HTTP
         │   └── TiendaServiceTest.java        ← regla de compra y validaciones
         └── rest/
             ├── ManejadorErroresTest.java     ← comprueba que no falte ningún handler
@@ -174,10 +187,13 @@ cs2/
                 ├── HudControllerTest.java
                 └── ControladoresTest.java
 insomnia/
-└── cs2-armas-crud.json                  ← colección para importar en Insomnia
+├── cs2-armas-crud.json                  ← colección para importar en Insomnia
+└── respuestas-poo09/                    ← respuestas reales del escenario (feliz y rechazos)
 docs/
 ├── especificaciones-poo-08.md           ← especificaciones para Classroom
-└── especificaciones-poo-08.pdf
+├── especificaciones-poo-08.pdf
+├── especificaciones-poo-09.md
+└── especificaciones-poo-09.pdf
 ```
 
 ---
@@ -572,7 +588,215 @@ Con **springdoc-openapi** la app publica la descripción de **todos** sus endpoi
 * **Documento OpenAPI 3 (JSON):** `http://localhost:8080/v3/api-docs`. Es el que importa Insomnia o un compañero.
 * **Swagger UI:** `http://localhost:8080/swagger-ui.html`. Es una página para leer la API y probar cada endpoint con *Try it out*.
 
+**Servidores:** `OpenApiConfig` declara `/` (el mismo origen desde donde se abre Swagger) y el link del funnel. Detrás de `tailscale funnel` springdoc generaba `http://…`, y desde la página https el navegador bloqueaba el *Try it out* («Failed to fetch»).
+
 Cada controller tiene un `@Tag` (grupo) y cada endpoint un `@Operation` (qué hace) y sus `@ApiResponse`, con el código y la excepción de cada error. Los cuerpos JSON (`ArmaRequest`, `JugadorRequest`, `ExplosionRequest`, `ErrorResponse`) tienen `@Schema` con la descripción y un ejemplo de cada campo. Así, alguien que no vio el código puede invocar el CRUD, la simulación y provocar los errores de las dos reglas. El título y la descripción general están en `config/OpenApiConfig`.
+
+---
+
+## 🤝 POO-09 — APIs cruzadas: «ataque coordinado»
+
+Enunciado: [ejercicio-poo-09-apis-cruzadas-2026-11-16](https://github.com/alefq/afq-taller-git-2024/blob/main/docs/ejercicio-poo-09-apis-cruzadas-2026-11-16.md). Especificaciones aplicadas a esta entrega: [`docs/especificaciones-poo-09.md`](docs/especificaciones-poo-09.md).
+
+### Mapa del grupo (trío de CS2)
+
+| Rol | Nombre | Repositorio | URL base | OpenAPI | Sus dos reglas (en una frase) |
+|---|---|---|---|---|---|
+| **A1** (este servicio) | Ariel Gaona | [ferue/agaona-taller-git-2026](https://github.com/ferue/agaona-taller-git-2026/tree/feature/RESTApi) (`feature/RESTApi`) | `https://ariel.tail26e794.ts.net` | `/v3/api-docs` · `/swagger-ui.html` | **1. Daño:** la HE daña a los jugadores vivos dentro del radio, aliados incluidos, y el chaleco lo reduce a la mitad. **2. Empuje:** las armas tiradas dentro del radio salen despedidas lejos del centro. Se consultan sin efectos en `POST /api/explosiones/validar`. |
+| **A2** | Mauricio Pecci | [MauricioPecci/MPecci-tplp3-2026](https://github.com/MauricioPecci/MPecci-tplp3-2026/tree/feature/rest) (`feature/rest`) | `https://desktop-hrm8vjo.tailde75e4.ts.net` | `/v3/api-docs` · `/swagger-ui/index.html` | Según su OpenAPI: **disparo** (`POST /api/armas/{id}/disparar`: un arma de fuego le dispara a otra, aplica daño, consume munición y puede destruirla; 400/404 si no es válido) y **daño** (`POST /api/armas/{id}/dano`: baja la durabilidad y en 0 el arma se destruye). |
+| **A3** | Vanessa Ricciardi | [luckvani-gif/vricciardi-tallerlp3-2026](https://github.com/luckvani-gif/vricciardi-tallerlp3-2026) | `http://100.95.213.93:8081` (red de Tailscale) | `/v3/api-docs` · `/swagger-ui/index.html` | Según su OpenAPI: **regla 1, disparar o lanzar** (`POST /api/armas/{id}/disparar`: consume munición o usa la granada; 409 si el arma no puede dispararse en su estado) y **regla 2, recargar** (`POST /api/armas/{id}/recargar`: pasa munición de la reserva al cargador; 409 si no hay reserva). |
+
+Las reglas de A2 y A3 salen **solo de sus documentos OpenAPI** (no se copió código de sus proyectos). Este servicio usa la regla de disparo de cada uno.
+
+### El escenario en una frase
+
+**Antes de lanzar la HE, dos compañeros abren fuego** (uno con un arma de A2 contra un objetivo, otro con un rifle de A3); **si los dos disparos son legales, la HE explota con las dos reglas propias y la jugada se guarda** en el H2 de A1.
+
+* `POST /api/jugadas` → `{"granadaId": 6, "x": 0, "y": 0, "z": 0}` (opcionales: `armaA2Id`, `objetivoA2Id`, `armaA3Id`; si no van, se usan los de `application.properties`).
+* `GET /api/jugadas` y `GET /api/jugadas/{id}` → las jugadas guardadas.
+
+**Orden de las consultas (y por qué):**
+
+1. **Reglas propias, sin efectos** (`ExplosionService.validar`): si la granada no existe, no es una HE o ya explotó, se corta acá. Los disparos de A2 y A3 **sí cambian sus bases** (gastan munición), así que no se les consulta si la jugada ya es ilegal de este lado.
+2. **A2** (Mauricio): `POST /api/armas/{armaA2Id}/disparar` con `{"objetivoId", "distancia": 0, "critico": false}`.
+3. **A3** (Vanessa): `POST /api/armas/{armaA3Id}/disparar?distancia=10`.
+4. **Si los dos aceptaron:** explota la HE (`ExplosionService.explotar`) y se guarda la `JugadaAtaque` → **201** con `Location`.
+
+**Qué se ve en la base después de un escenario exitoso:** una fila nueva en `jugadas` (qué granada, dónde, qué respondió cada compañero y el resultado de la explosión), la HE marcada como detonada, las vidas de los jugadores dañados y las armas empujadas en su nueva posición. **Si A2 acepta y A3 rechaza:** no se escribe nada. La HE sigue sin detonar, no se agrega ninguna jugada y las vidas y posiciones quedan igual (lo único que cambió es la munición en la base de A2, que es de A2).
+
+### Configuración de las URLs (cliente)
+
+En `cs2/src/main/resources/application.properties`, y cada una se puede pisar con una variable de entorno sin tocar código (`CS2_A2_URL`, `CS2_A3_URL`, `CS2_A2_ARMA_ID`, `CS2_A3_ARMA_ID`...):
+
+```properties
+cs2.a2.url=https://desktop-hrm8vjo.tailde75e4.ts.net
+cs2.a2.arma-id=1
+cs2.a2.objetivo-id=2
+cs2.a3.url=http://100.95.213.93:8081
+cs2.a3.arma-id=4          # "AK-47 lleno" (acepta); el 3 es "AK-47 vacio" (rechaza)
+cs2.a3.distancia=10
+cs2.companeros.timeout-ms=5000
+```
+
+Los clientes son `client/A2ArmasClient` y `client/A3ArmasClient` (WebClient), con una base común `CompaneroClient`. Cada paso queda en el log con nivel **DEBUG** (`logging.level.py.edu.uc.lp3.ag.cs2.client=DEBUG`): a quién se llama, qué código respondió, cuánto tardó y si aceptó o rechazó.
+
+### Errores: se traducen a la jerarquía propia
+
+No se propaga el cuerpo del compañero tal cual: se traduce a una excepción **de este servicio**, con el código y el motivo del compañero dentro del mensaje. Cada compañero tiene sus propias excepciones, así `ManejadorErrores` distingue «falló A2» de «falló A3»:
+
+| Qué pasó | Excepción | HTTP |
+|---|---|---|
+| A2 respondió 4xx (rechazó) | `RechazoA2Exception` | 409 |
+| A3 respondió 4xx, o 200 con `exito: false` (rechazó) | `RechazoA3Exception` | 409 |
+| A2 no respondió, tardó más del límite o respondió 5xx | `A2NoDisponibleException` | 502 |
+| A3 no respondió, tardó más del límite o respondió 5xx | `A3NoDisponibleException` | 502 |
+| Reglas propias (granada ya detonada, no es HE, no existe) | `GranadaYaDetonadaException` · `ArmaNoExplosivaException` · `ArmaNoEncontradaException` | 409 · 400 · 404 |
+
+### Diagramas de secuencia
+
+**Camino feliz (201)**: el recorrido completo de `POST /api/jugadas` dentro de A1 (controller, service, clientes y repositorio), con los datos reales de la prueba del 23/11.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Cliente as Insomnia (cliente)
+    participant C as JugadaController
+    participant S as JugadaService
+    participant E as ExplosionService
+    participant A2 as A2 Mauricio (A2ArmasClient)
+    participant A3 as A3 Vanessa (A3ArmasClient)
+    participant DB as H2 de A1
+
+    Cliente->>C: POST /api/jugadas {granadaId: 18, x: 0, y: 0, z: 0, armaA2Id: 1, objetivoA2Id: 2, armaA3Id: 4}
+    C->>S: atacar(granadaId, centro, armaA2Id, objetivoA2Id, armaA3Id)
+    Note over S,DB: @Transactional: si A2 o A3 rechazan (pasos 6 a 9), se corta acá y no se escribe nada
+    S->>E: validar(granadaId, centro)
+    E->>DB: lee la HE, los jugadores y las armas (solo lectura)
+    E-->>S: reglas propias OK (daño y empuje simulados, sin guardar)
+    S->>A2: POST /api/armas/1/disparar {objetivoId: 2, distancia: 0, critico: false}
+    A2-->>S: 200 AK-47 le disparó a Glock-18: 36 de daño
+    S->>A3: POST /api/armas/4/disparar?distancia=10
+    A3-->>S: 200 exito: true, 34 de daño (4/15)
+    S->>E: explotar(granadaId, centro)
+    E->>DB: HE detonada, vidas bajadas y armas desplazadas
+    S->>DB: save(JugadaAtaque con resultadoA2 y resultadoA3)
+    DB-->>S: jugada con id 3
+    S-->>C: JugadaAtaque
+    C-->>Cliente: 201 Created, Location: /api/jugadas/3
+```
+
+**Rechazo de A2 (409)**
+
+```mermaid
+sequenceDiagram
+    actor Cliente as Insomnia (cliente)
+    participant A1 as A1 Ariel (escenario)
+    participant H2 as H2 de A1
+    participant A2 as A2 Mauricio (disparo)
+    participant A3 as A3 Vanessa (disparo)
+
+    Cliente->>A1: POST /api/jugadas {granadaId, ..., armaA2Id: 999}
+    A1->>H2: validar reglas propias (sin efectos)
+    A1->>A2: POST /api/armas/999/disparar
+    A2-->>A1: 404 ARMA_NO_ENCONTRADA
+    Note over A1,A3: A3 no se consulta
+    A1->>A1: deja su H2 igual que antes
+    A1-->>Cliente: 409 RechazoA2Exception (rechazo de Mauricio)
+```
+
+**Rechazo de A3 (409)**
+
+```mermaid
+sequenceDiagram
+    actor Cliente as Insomnia (cliente)
+    participant A1 as A1 Ariel (escenario)
+    participant H2 as H2 de A1
+    participant A2 as A2 Mauricio (disparo)
+    participant A3 as A3 Vanessa (disparo)
+
+    Cliente->>A1: POST /api/jugadas {granadaId, ..., armaA3Id: 3}
+    A1->>H2: validar reglas propias (sin efectos)
+    A1->>A2: POST /api/armas/1/disparar
+    A2-->>A1: 200 disparo legal
+    A1->>A3: POST /api/armas/3/disparar?distancia=10
+    A3-->>A1: 409 CargadorVacioException
+    A1->>A1: deja su H2 igual que antes
+    A1-->>Cliente: 409 RechazoA3Exception (rechazo de Vanessa)
+```
+
+**Compañero caído (502)**
+
+```mermaid
+sequenceDiagram
+    actor Cliente as Insomnia (cliente)
+    participant A1 as A1 Ariel (escenario)
+    participant A2 as A2 Mauricio (disparo)
+    participant A3 as A3 Vanessa (disparo)
+
+    Cliente->>A1: POST /api/jugadas {granadaId, x, y, z}
+    A1->>A2: POST /api/armas/1/disparar
+    A2-->>A1: 500 (o sin respuesta en 5 s)
+    Note over A1,A3: A3 no se consulta y no se guarda nada
+    A1-->>Cliente: 502 A2NoDisponibleException
+```
+
+### Resultados reales
+
+Guardados en [`insomnia/respuestas-poo09/`](insomnia/respuestas-poo09/) por si un compañero no está en línea durante la corrección.
+
+**22/11/2026, con A2 y A3 en línea por Tailscale** (archivos 1 a 6):
+
+| Caso | Respuesta |
+|---|---|
+| Camino feliz | **201** · `resultadoA2`: «pistola le disparó a Pi: 1 de daño, quedan 9 balas» · `resultadoA3`: «AK-47 lleno disparó: 34 de daño (estado 29/90)» · la HE dañó a 3 jugadores (1 eliminado) y desplazó 3 armas |
+| Rechazo de A3 (`armaA3Id: 3`) | **409** `RechazoA3Exception`: «A3 (Vanessa Ricciardi) rechazó la jugada con HTTP 409: CargadorVacioException: Cargador vacío: hay que recargar. No se guardó nada.» |
+| Rechazo de A2 (`armaA2Id: 999`) | **409** `RechazoA2Exception`: «A2 (Mauricio Pecci) rechazó la jugada con HTTP 404: ARMA_NO_ENCONTRADA: Arma no encontrada con id: 999…» |
+| A2 caído | **502** `A2NoDisponibleException`: «…POST /api/armas/1/disparar respondió HTTP 500» |
+| Granada propia ya detonada | **409** `GranadaYaDetonadaException`, sin consultar a nadie |
+| `GET /api/jugadas` después de todo | una sola jugada: los rechazos no guardaron nada |
+
+**23/11/2026, presencial, con A2 y A3 por la red de la facultad** (archivos 7 a 10; A1 arrancado con `--cs2.a2.url=http://10.30.13.183:8081 --cs2.a3.url=http://10.30.14.22:8081`):
+
+| Caso | Respuesta |
+|---|---|
+| Camino feliz (HE 18, A2 arma 1 → objetivo 2, A3 arma 4) | **201** · `resultadoA2`: «AK-47 le disparó a Glock-18: 36 de daño, quedan 28 balas» · `resultadoA3`: «AK-47 disparó: 34 de daño, Disparo a 10.0 m (4/15)» |
+| Rechazo de A3 (`armaA3Id: 999`) | **409** `RechazoA3Exception`: «A3 (Vanessa Ricciardi) rechazó la jugada con HTTP 404: RecursoNoEncontradoException: No existe un arma con id 999. No se guardó nada.» |
+| Rechazo de A2 (`armaA2Id: 999`) | **409** `RechazoA2Exception`: «A2 (Mauricio Pecci) rechazó la jugada con HTTP 404: ARMA_NO_ENCONTRADA: Arma no encontrada con id: 999…» |
+| `GET /api/jugadas` antes y después | 2 → 3: solo sumó el camino feliz, los rechazos no guardaron nada |
+
+Ese día A3 ya no tenía un arma con el cargador vacío (la 3 había sido recargada), así que el rechazo de A3 se probó con un id inexistente. El rechazo por la regla de negocio de A3 (`CargadorVacioException`) es el del 22/11.
+
+### Cómo arrancar los tres servicios
+
+Primero A2 y A3, después A1 (este servicio). Si se corren en la misma máquina, cada uno en su puerto (el de A1 se cambia con `--server.port=8082`).
+
+1. **A3 (Vanessa):** `git clone https://github.com/luckvani-gif/vricciardi-tallerlp3-2026.git` y `./mvnw spring-boot:run` (puerto 8081). Su carga inicial trae el arma 4 («AK-47 lleno») y la 3 («AK-47 vacio»).
+2. **A2 (Mauricio):** `git clone -b feature/rest https://github.com/MauricioPecci/MPecci-tplp3-2026.git` y `./mvnw spring-boot:run`. Su H2 es **en memoria y arranca vacía**: antes del escenario hay que crear el arma 1 (con munición) y el arma 2 (objetivo) con `POST /api/armas` (carpeta 11 de Insomnia, pedidos «Preparar A2»).
+3. **A1 (Ariel):** `cd cs2` y `./mvnw spring-boot:run`, con `cs2.a2.url` y `cs2.a3.url` apuntando a donde corren A2 y A3 (por ejemplo `http://localhost:8081`).
+4. Insomnia → carpeta **11. POO-09**, en orden.
+
+**Por red local** (lo que se usó el 23/11): cada uno arranca su app en su notebook y A1 apunta a las IP de los otros dos, sin tocar código:
+
+```powershell
+cd cs2
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--cs2.a2.url=http://IP_DE_A2:8081 --cs2.a3.url=http://IP_DE_A3:8081"
+```
+
+En Insomnia, `base_a2` y `base_a3` del entorno van con esas mismas URLs. En Windows hay que permitir el puerto de entrada en el firewall para que los compañeros lleguen a A1.
+
+**Si Mauricio reinicia su app**, su H2 en memoria vuelve a arrancar vacía: hay que correr de nuevo los dos pedidos «Preparar A2». Además, cada camino feliz le dispara a su arma 2 y le baja la durabilidad; cuando llega a 0 el arma se destruye y el siguiente intento da 409 (`ARMA_NO_ENCONTRADA`). En ese caso se crea otro objetivo y se manda su id en `objetivoA2Id`.
+
+En línea, cada uno publica su servicio con `tailscale funnel <puerto>` (link `https://…ts.net`). Mientras el link está abierto, la app se levanta **sin la consola de H2** (`--spring.h2.console.enabled=false`), porque el link es público.
+
+### Si un compañero no responde
+
+* El cliente espera como máximo 5 s (`cs2.companeros.timeout-ms`) y responde **502** con el nombre del compañero, sin guardar nada.
+* Lo que pasó el 22/11: el servicio de A2 respondió 500 mientras Mauricio lo modificaba. Se le avisó por el grupo con el stack trace a revisar, y el escenario devolvió `A2NoDisponibleException` (respuesta guardada en `insomnia/respuestas-poo09/4-A2-no-disponible-502.json`).
+* Las respuestas reales del camino feliz y de cada rechazo están guardadas, así que se puede ver el resultado aunque A2 o A3 estén apagados.
+
+### Pregunta de anclaje
+
+*Si un compañero cambia el nombre de una ruta, ¿alcanza con actualizar lo que dice el OpenAPI?* Sí. La ruta de cada compañero está en un solo lugar (`A2ArmasClient.disparar` y `A3ArmasClient.disparar`), escrita a partir de su OpenAPI; si cambia la base, se cambia `application.properties`. No hay clases de su dominio copiadas: sus respuestas se leen con records propios (`DisparoA2`, `DisparoA3`) que solo toman los campos que se usan.
 
 ---
 
@@ -594,7 +818,8 @@ RuntimeException
     ├── RecursoNoEncontradoException (abstracta) ──── → 404
     │   ├── ArmaNoEncontradaException        ├── JugadorNoEncontradoException
     │   ├── TiendaNoEncontradaException      ├── ElementoUINoEncontradoException
-    │   └── ObjetoExternoNoEncontradoException
+    │   ├── ObjetoExternoNoEncontradoException
+    │   └── JugadaNoEncontradaException
     ├── ReglaNegocioException (abstracta)
     │   ├── ArmaDuplicadaException ─────────────────── 409
     │   ├── JugadorDuplicadoException ──────────────── 409
@@ -606,7 +831,12 @@ RuntimeException
     │   ├── ArmaNoExplosivaException ───────────────── 400
     │   └── ArmaNoDisparaException ─────────────────── 400
     └── ServicioExternoException (abstracta) ──────── APIs ajenas consumidas con WebClient
-        └── ServicioExternoNoDisponibleException ──── 502
+        ├── ServicioExternoNoDisponibleException ──── 502
+        │   ├── A2NoDisponibleException ──────────── 502 (POO-09: A2 caído)
+        │   └── A3NoDisponibleException ──────────── 502 (POO-09: A3 caído)
+        └── RechazoCompaneroException (abstracta) ── POO-09: un compañero rechazó la jugada
+            ├── RechazoA2Exception ───────────────── 409
+            └── RechazoA3Exception ───────────────── 409
 ```
 
 * Solo la capa service lanza estas excepciones, sin saber nada de HTTP. El dominio no lanza ninguna.
@@ -651,6 +881,7 @@ La colección está versionada en `insomnia/cs2-armas-crud.json`. Cubre el CRUD,
 | 8. Tienda, ráfaga y /ui | Caso feliz y errores de los endpoints de POO-06 y POO-07 |
 | 9. Eliminar (al final) | `DELETE` del arma 1 y el `GET` posterior que da 404 |
 | 10. API externa y OpenAPI | `GET /v3/api-docs`, Swagger UI y la consulta a restful-api.dev con WebClient (lista, filtro, por id y 404) |
+| 11. POO-09 - escenario con A2 y A3 | OpenAPI de A1, A2 y A3; preparar A2 (crear sus armas 1 y 2); crear las HE; validar sin detonar; **camino feliz (201)**; **rechazo de A3 (409)** con el arma 999 (funciona siempre) y por cargador vacío (regla de negocio de A3); **rechazo de A2 (409)**; granada ya usada; ver jugadas. La descripción de cada pedido trae la respuesta real |
 
 **Orden de ejecución:**
 
@@ -662,8 +893,9 @@ La colección está versionada en `insomnia/cs2-armas-crud.json`. Cubre el CRUD,
 6. Ver el estado persistido en el HUD: carpeta 7.
 7. Tienda, ráfaga y `/ui`: carpeta 8.
 8. Borrar al final: carpeta 9.
+9. POO-09: con A2 y A3 arriba, carpeta 11 (ver [Cómo arrancar los tres servicios](#cómo-arrancar-los-tres-servicios)).
 
-Variables del entorno: `base_url` (`http://localhost:8080`), `id` (arma para `GET`/`PUT`/`DELETE`, 1 = AK-47), `jugadorId` (1 = Fénix) y `granadaId` (6 = la HE de ejemplo). Si la base no está limpia los ids cambian: se ven con `GET /api/armas`.
+Variables del entorno: `base_url` (`http://localhost:8080`), `id` (arma para `GET`/`PUT`/`DELETE`, 1 = AK-47), `jugadorId` (1 = Fénix) y `granadaId` (6 = la HE de ejemplo). Para el POO-09: `base_a2` y `base_a3` (URLs de los compañeros) y `granadaEscenario` / `granadaRechazos`: después de crear cada HE, copiá en la variable el `id` que devolvió (15 y 16 con la base limpia). Si la base no está limpia los ids cambian: se ven con `GET /api/armas`.
 
 ---
 

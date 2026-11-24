@@ -188,7 +188,7 @@
 
 ---
 
-## 🤖 Sesión 7 — Cierre de las observaciones del POO-08 (22/11/2026)
+## 🤖 Sesión 7 — Cierre de las observaciones del POO-08 y challenge del POO-09 (22/11/2026)
 
 * **Asistente / Agente de IA:** Claude (Anthropic), mediante Claude Code
 * **Modelo de LLM exacto:** Claude Opus 5.5 (`claude-opus-5-5`)
@@ -217,3 +217,36 @@
     * *Prompt:* «Dale» (a la propuesta de agregar una versión que solo pregunte).
     * *Acción:* `ExplosionService.validar(...)` (transacción de solo lectura) aplica las mismas validaciones y reglas que `explotar(...)` sin detonar, bajar vidas ni mover armas; `POST /api/explosiones/validar` documentado en OpenAPI con sus 200, 400, 404 y 409; `server.port=${PORT:8080}`; test que comprueba que validar no cambia nada; dos pedidos en Insomnia (validar → 200 y validar la HE ya detonada → 409) y sección en el README. Se descartó un validador de «jugadas» con un contrato común, porque no usaba las reglas del POO-08.
     * *Verificación:* **67 tests, 0 fallas**; colección ejecutada con la base limpia (carpetas 1 a 9 sin diferencias).
+
+17. **Clientes hacia A2 y A3 y escenario persistido:**
+    * *Contexto:* el grupo quedó armado (A1 Ariel, A2 Mauricio Pecci, A3 Vanessa Ricciardi) y cada uno publicó su servicio con `tailscale funnel`. Se leyeron sus OpenAPI (`/v3/api-docs`) y se eligió la regla de disparo de cada uno; no se usó el código fuente de sus proyectos.
+    * *Prompt:* «Vamos con el vanessa» (escenario con A3 probado y A2 configurable mientras su servicio daba 500).
+    * *Acción:* `CompaneroClient` (base con WebClient, timeout, 2xx acepta, 4xx rechaza, 5xx o sin respuesta → no disponible, log DEBUG de cada paso), `A2ArmasClient` y `A3ArmasClient`; rama nueva de excepciones `RechazoCompaneroException` → `RechazoA2Exception` / `RechazoA3Exception` (409) y `A2NoDisponibleException` / `A3NoDisponibleException` (502), cada una con su handler; `JugadaAtaque` + `JugadaService` + `POST /api/jugadas` («ataque coordinado»: reglas propias sin efectos, A2, A3 y recién ahí explosión y guardado); URLs e ids en `application.properties`; `CompanerosClientTest` y `JugadaServiceTest` (A2 y A3 simulados con un servidor HTTP de prueba).
+    * *Verificación:* **78 tests, 0 fallas**. Contra los servicios reales: camino feliz **201**, rechazo de A3 **409** (`CargadorVacioException` de Vanessa), rechazo de A2 **409** (404 de Mauricio), A2 caído **502** y `GET /api/jugadas` con una sola jugada después de los rechazos.
+18. **Swagger detrás del funnel:**
+    * *Problema:* desde el link https del funnel, *Try it out* daba «Failed to fetch» porque springdoc anunciaba el servidor como `http://…`.
+    * *Acción:* `OpenApiConfig` declara los servidores `/` y el link del funnel. Se le pasó a Mauricio el mismo arreglo y un prompt acotado para su opencode.
+19. **Documentación del POO-09:**
+    * *Prompt:* «tenemos ya registro de que hicimos todo… guardémoslo».
+    * *Acción:* sección POO-09 del README (mapa A1/A2/A3, escenario, orden, configuración, errores, 4 diagramas Mermaid, resultados reales, cómo arrancar los tres servicios, qué hacer si uno no responde y pregunta de anclaje); carpeta 11 de Insomnia con variables para las tres bases; respuestas reales en `insomnia/respuestas-poo09/`; `docs/especificaciones-poo-09.md` y su PDF.
+
+---
+
+## 🤖 Sesión 8 — Verificación del POO-09 por la red de la facultad y cierre de la entrega (23/11/2026)
+
+* **Asistente / Agente de IA:** Claude (Anthropic), mediante Claude Code
+* **Modelo de LLM exacto:** Claude Opus 5.5 (`claude-opus-5-5`)
+* **Modo de trabajo:** la IA editó solo los archivos locales; el alumno hace los commits y el push.
+
+### Resumen de prompts e interacciones
+
+20. **Probar el escenario en la clase presencial, por la red local:**
+    * *Prompt:* «Queremos manejarnos por la red local de la facultad. Ayudame» y después «hagamos nosotros todas las verificaciones por favor. Hagamos los pasos correctos, necesito solucionar esto».
+    * *Contexto:* los links de Tailscale no respondían desde la red de la facultad. Cada uno arrancó su app en su notebook: A1 en `10.30.14.44:8080`, A2 (Mauricio) en `10.30.13.183:8081` y A3 (Vanessa) en `10.30.14.22:8081`. A1 se arrancó con `--cs2.a2.url` y `--cs2.a3.url` apuntando a esas IP, sin tocar código, y se abrió el puerto 8080 en el firewall de Windows.
+    * *Problemas encontrados:* el `disparar` de A2 respondía 500 a todo (error del lado de Mauricio, que lo corrigió); A2 reinicia con la base vacía y hay que volver a crear sus armas; el arma 3 de A3 ya no estaba vacía, así que el rechazo planeado de A3 se guardó como camino feliz (jugada 2). Por eso el rechazo de A3 en Insomnia pasó a usar un id inexistente (999), que funciona siempre, y se dejó aparte el pedido del cargador vacío.
+    * *Acción:* la IA escribió un script de PowerShell (fuera del repositorio) que elige las armas según lo que devuelven A2 y A3, crea dos HE nuevas, corre el camino feliz y los dos rechazos y compara la cantidad de jugadas antes y después. Una prueba extra para lograr rechazos por regla de negocio sin el id 999 no sirvió: A2 y A3 respondieron 500 y el arma 2 de A2 ya había sido destruida. Se descartó y quedó como evidencia válida la corrida de las 17:28.
+    * *Verificación (23/11, 17:28):* los 3 servicios **200**; camino feliz **201** (jugada 3); rechazo de A3 **409** `RechazoA3Exception`; rechazo de A2 **409** `RechazoA2Exception`; jugadas **2 → 3** (los rechazos no guardaron nada). Respuestas guardadas en `insomnia/respuestas-poo09/7` a `10`.
+
+21. **Dejar la entrega lista para el profesor:**
+    * *Prompt:* «Y queda modificar el insomnia con el caso 999 para que si el profe quiera probar funcione. También nos queda pendiente preparar la entrega, con el mermaid y el readme».
+    * *Acción:* Insomnia: «Rechazo de A3» con el arma 999, nuevo pedido «Rechazo de A3 por regla (cargador vacío)» y avisos para copiar el id de cada HE en las variables. README: diagrama del camino feliz detallado por capas (controller, service, clientes y repositorio), resultados del 23/11, cómo arrancar los tres servicios por red local y qué hacer si A2 reinicia o se destruye su objetivo.
